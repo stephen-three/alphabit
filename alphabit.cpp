@@ -1158,7 +1158,7 @@ void Controls()
 		C.set_lvl(hw.adc.GetFloat(lvlCpot));
 	}
 
-	// leds
+	// LEDs
 	uint16_t blink = 4000;
 	bool lightA;
 	bool lightB;
