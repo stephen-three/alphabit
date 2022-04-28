@@ -1,4 +1,0 @@
-{
-    "board": "STMicroelectronics:stm32:GenH7",
-    "port": "/dev/tty.wlan-debug"
-}
