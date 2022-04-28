@@ -1,5 +1,5 @@
 // alphabit.cpp
-// beta_14
+// beta_14_00
 //
 // Three Channel Looper
 // 
