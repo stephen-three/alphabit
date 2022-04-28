@@ -518,8 +518,8 @@ void LoopChannel::NextSample(float &playback, daisy::AudioHandle::InputBuffer in
 			else if (playbackSpeed > 100)
 			{
 				float rate = float(playbackSpeed)/100.f; // divide by 100 to get into the proper range (0.25-4.0)
+				// truncate the float value
 				uint8_t rateTRUNC = rate;
-				// ^^^ truncates the float value
 				rateRemainder += rate - rateTRUNC; 
 				pushVal = rateTRUNC;
 				if (rateRemainder >= 1.f)
