@@ -1,5 +1,5 @@
 # alphabit
-The alphabit is a three-channel looper guitar effects pedal built using the Electro-Smith [Daisy Seed](https://www.electro-smith.com/daisy/daisy).
+The alphabit is a three-channel looper effects pedal built using the Electro-Smith [Daisy Seed](https://www.electro-smith.com/daisy/daisy).
 
 ---
 
