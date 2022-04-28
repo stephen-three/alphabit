@@ -50,6 +50,11 @@ const std::string notes = "Tested. Working as intended"
 		The current math does not account for if one of the
 		channels is not full volume and changes to the playCondition
 		are instant, producing (possibly undesirable) jumps in volume.
+	FIXME in AudioCallback() when mode == 1
+	Elimante logical error
+		When mode == 1, but no loop is recorded on chA, you should hear
+		the dry signal. You should also hear the dry when a loop is being
+		recorded on a secondary channel.
 	The slight difference between starting recording and releasing the
 		to end recording could possibly be corrected with a delayed call
 		to stop_rec() (delayed by the holdTime amount)
@@ -1299,6 +1304,13 @@ void AudioCallback(AudioHandle::InputBuffer in, AudioHandle::OutputBuffer out, s
 				Level logic is suboptimal and should be refined.
 			*/
 			if (recordedA || recordedB || recordedC)
+			/* FIXME: this ^^^ line is causing a logical error in Playback
+				When mode == 1, you should hear loops you're currently recording
+				on secondary channels, which is impossible currently.
+				Additionally, when a loop is recorded on a secondary channel but
+				nothing is recorded on the primary, chA, you should be hearing the
+				dry signal, but nothing is heard
+			*/
 			{
 				switch (playCondition)
 				{
