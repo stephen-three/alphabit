@@ -223,6 +223,9 @@ public:
 	{
 		// daisy::Switch would need to be initialized externally
 		// but with full control of parameters
+		
+		// except it can't be initialized externally
+		// because the fsw member is private
 	}
 
 	Footswitch(daisy::Pin pin)
@@ -360,7 +363,7 @@ int main(void)
 		ledR.Write(false);
 		ledG.Write(false);
 		ledB.Write(false);
-		//-------------------------------------
+		//---------------
 		ledR.Write(true);
 		ledB.Write(true);
 		uint32_t time = System::GetNow();
@@ -486,13 +489,9 @@ void LoopChannel::NextSample(float &playback, daisy::AudioHandle::InputBuffer in
 		if (rec)
 		{
 			// Playback is unaffected by the Time & Rvrs when recording
-
 			position++;
 			if (pass == 1) position %= len;
-			else position %= mod;
-
-			// see if this entire condition can be eliminated
-			// so that playback reflects Time & Rvrs even when recording
+			else position %= mod; 
 		}
 		else 
 		{
