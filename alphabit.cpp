@@ -332,7 +332,7 @@ int main(void)
 {
 	hw.Init();
 	hw.SetAudioBlockSize(4); // number of samples handled per callback
-	// change to 48, 96 ^^^ ?
+	// change to 48, 96 ^^^ ? !final form
 	hw.SetAudioSampleRate(SaiHandle::Config::SampleRate::SAI_96KHZ);
 	float sample_rate = hw.AudioSampleRate();
 	cf.Init();
@@ -1163,7 +1163,7 @@ void Controls()
 		C.set_lvl(hw.adc.GetFloat(lvlCpot));
 	}
 
-	// leds
+	// LEDs
 	uint16_t blink = 4000;
 	bool lightA;
 	bool lightB;
