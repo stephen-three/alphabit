@@ -1113,6 +1113,14 @@ void Controls()
 			db = 0;
 		}
 
+		// PotMonitor<uint16_t, 3> gkMonitor;
+		// UiEventQueue q;
+		// uint16_t abc = 0;
+		// gkMonitor.Init(q, abc);
+		// if (gkMonitor.IsMoving(0))
+		// {
+
+		// }
 		float freq;
 		if (prevFreqA != freqA)
 		{
