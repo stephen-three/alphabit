@@ -708,7 +708,9 @@ void LoopChannel::WriteBuffer(daisy::AudioHandle::InputBuffer in, size_t i)
 	/* FIXME:
 		This method of overdub volume control gradually pushes towards silence.
 		The volume is noticeably too quiet after just a couple passes.
-		This is not a viable alternative and needs to be corrected.
+		This may not be a viable alternative and needs to be corrected.
+		On the other hand, it does create an interesting delay effect.
+		Is there a possible comprosmise
 	*/
 }
 
