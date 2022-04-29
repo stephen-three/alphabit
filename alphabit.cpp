@@ -44,17 +44,16 @@ const std::string notes = "Tested. Working as intended"
 	FIXME in LoopChannel::WriteBuffer()
 	Improve overdub volume control-
 		The current math pushes the overdubs toward silence too
-		quickly.
+		quickly. By the third pass on a loop, the volume of incoming
+		signal is nearly inaudible. This signal should be retained.
+		Is there a compromise with this method that would still allow
+		for the bonus of a delay when the loop duration is short and
+		the fsw is held down, continually overdubbing.
 	FIXME in AudioCallback() { if (byp) else ... }
 	Improve level logic-
 		The current math does not account for if one of the
 		channels is not full volume and changes to the playCondition
 		are instant, producing (possibly undesirable) jumps in volume.
-	FIXME in AudioCallback() when mode == 1
-	Elimante logical error
-		When mode == 1, but no loop is recorded on chA, you should hear
-		the dry signal. You should also hear the dry when a loop is being
-		recorded on a secondary channel.
 	The slight difference between starting recording and releasing the
 		to end recording could possibly be corrected with a delayed call
 		to stop_rec() (delayed by the holdTime amount)
