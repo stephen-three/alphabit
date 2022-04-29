@@ -375,7 +375,6 @@ int main(void)
 		while (System::GetNow() < time + 450){}
 		ledR.Write(false);
 		ledG.Write(true);
-		ledB.Write(true);
 		time = System::GetNow();
 		while (System::GetNow() < time + 450){}
 		ledR.Write(true);
@@ -383,14 +382,9 @@ int main(void)
 		ledB.Write(false);
 		time = System::GetNow();
 		while (System::GetNow() < time + 450){}
-		ledR.Write(true);
-		ledG.Write(true);
 		ledB.Write(true);
 		time = System::GetNow();
 		while (System::GetNow() < time + 600){}
-		ledR.Write(true);
-		ledG.Write(true);
-		ledB.Write(true);
 		bypR.Write(true);
 		bypGB.Write(true);
 		time = System::GetNow();
