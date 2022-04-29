@@ -548,9 +548,9 @@ void LoopChannel::NextSample_1(float &playback, daisy::AudioHandle::InputBuffer 
 	{
 		WriteBuffer(in, i);
 		recorded = true;
+		playback = *(p_loop + position);
 	}
-
-	playback = *(a->p_loop + this->position);
+	else playback = *(a->p_loop + this->position);
 
 	if (len >= size)
 	{
@@ -1267,101 +1267,146 @@ void AudioCallback(AudioHandle::InputBuffer in, AudioHandle::OutputBuffer out, s
 		if (setFltrB) playbackB = fltrB.Process(playbackB);
 		if (setFltrC) playbackC = fltrC.Process(playbackC);
 
-		bool recordedA = A.get_recdd();
-		bool recordedB = B.get_recdd();
-		bool recordedC = C.get_recdd();
-		bool playA = A.get_play();
-		bool playB = B.get_play();
-		bool playC = C.get_play();
-		uint8_t playCondition = 0;
-		if (recordedA && playA) playCondition += 1;
-		if (mode == 1)
-		{
-			if (recordedA)
-			{
-				if (playB) playCondition += 2;
-				if (playC) playCondition += 4;
-			}
-		}
-		else 
-		{
-			if (recordedB && playB) playCondition += 2;
-			if (recordedC && playC) playCondition += 4;
-		}
-		
+		float dry = in[0][i];
+		float wet = 0.f;
 		if (byp)
 		{
-			out[0][i] = in[0][i];
+			out[0][i] = dry;
 			/* !final form
 				This would be unnecessary? with the Relay bypass
 			*/
 		}
 		else
 		{
-			float dry = in[0][i];
-			float wet = 0.f;
-			/* FIXME:
-				Level logic is suboptimal and should be refined.
-			*/
-			if (recordedA || recordedB || recordedC)
-			/* FIXME: this ^^^ line is causing a logical error in Playback
-				When mode == 1, you should hear loops you're currently recording
-				on secondary channels, which is impossible currently.
-				Additionally, when a loop is recorded on a secondary channel but
-				nothing is recorded on the primary, chA, you should be hearing the
-				dry signal, but nothing is heard
-			*/
-			{
-				switch (playCondition)
-				{
-					float levelA;
-					float levelB;
-					float levelC;
+			bool recordedA = A.get_recdd();
+			bool recordedB = B.get_recdd();
+			bool recordedC = C.get_recdd();
+			bool playA = A.get_play();
+			bool playB = B.get_play();
+			bool playC = C.get_play();
 
-					case 0:
-						// loops recorded but no playbacks
-						break;
-					case 1:
-						levelA = A.get_lvl();
-						wet = playbackA * levelA;
-						break;
-					case 2:
-						levelB = B.get_lvl();
-						wet = playbackB * levelB;
-						break;
-					case 3:
-						levelA = A.get_lvl();
-						levelB = B.get_lvl();
-						wet = (playbackA * (levelA/2)) + (playbackB * (levelB/2));
-						break;
-					case 4:
-						levelC = C.get_lvl();
-						wet = playbackC * levelC;
-						break;
-					case 5:
-						levelA = A.get_lvl();
-						levelC = C.get_lvl();
-						wet = (playbackA * (levelA/2)) + (playbackC * (levelC/2));
-						break;
-					case 6:
-						levelB = B.get_lvl();
-						levelC = C.get_lvl();
-						wet = (playbackB * (levelB/2)) + (playbackC * (levelC/2));
-						break;
-					case 7:
-						levelA = A.get_lvl();
-						levelB = B.get_lvl();
-						levelC = C.get_lvl();
-						wet = (playbackA * (levelA/3)) + (playbackB * (levelB/3)) + (playbackC *  (levelC/3));
-						break;
+			uint8_t playCondition = 0;
+			if (recordedA && playA) playCondition += 1;
+			if (mode == 1)
+			{
+				bool rec_ingB = B.get_rec();
+				bool rec_ingC = C.get_rec();
+				if ((recordedA && playB) || rec_ingB) playCondition += 2;
+				if ((recordedA && playC) || rec_ingC) playCondition += 4;
+
+				if (recordedA || rec_ingB || rec_ingC)
+				{
+					switch (playCondition)
+					{
+						float levelA;
+						float levelB;
+						float levelC;
+						case 0:
+							// loops recorded but no playbacks
+							break;
+						case 1:
+							levelA = A.get_lvl();
+							wet = playbackA * levelA;
+							break;
+						case 2:
+							levelB = B.get_lvl();
+							wet = playbackB * levelB;
+							break;
+						case 3:
+							levelA = A.get_lvl();
+							levelB = B.get_lvl();
+							wet = (playbackA * (levelA/2)) + (playbackB * (levelB/2));
+							break;
+						case 4:
+							levelC = C.get_lvl();
+							wet = playbackC * levelC;
+							break;
+						case 5:
+							levelA = A.get_lvl();
+							levelC = C.get_lvl();
+							wet = (playbackA * (levelA/2)) + (playbackC * (levelC/2));
+							break;
+						case 6:
+							levelB = B.get_lvl();
+							levelC = C.get_lvl();
+							wet = (playbackB * (levelB/2)) + (playbackC * (levelC/2));
+							break;
+						case 7:
+							levelA = A.get_lvl();
+							levelB = B.get_lvl();
+							levelC = C.get_lvl();
+							wet = (playbackA * (levelA/3)) + (playbackB * (levelB/3)) + (playbackC *  (levelC/3));
+							break;
+					}
 				}
+				else wet = dry;
 			}
-			else wet = dry;
+			else 
+			{
+				if (recordedB && playB) playCondition += 2;
+				if (recordedC && playC) playCondition += 4;
+
+				if (recordedA || recordedB || recordedC)
+				{
+					switch (playCondition)
+					{
+						float levelA;
+						float levelB;
+						float levelC;
+						case 0:
+							// loops recorded but no playbacks
+							break;
+						case 1:
+							levelA = A.get_lvl();
+							wet = playbackA * levelA;
+							break;
+						case 2:
+							levelB = B.get_lvl();
+							wet = playbackB * levelB;
+							break;
+						case 3:
+							levelA = A.get_lvl();
+							levelB = B.get_lvl();
+							wet = (playbackA * (levelA/2)) + (playbackB * (levelB/2));
+							break;
+						case 4:
+							levelC = C.get_lvl();
+							wet = playbackC * levelC;
+							break;
+						case 5:
+							levelA = A.get_lvl();
+							levelC = C.get_lvl();
+							wet = (playbackA * (levelA/2)) + (playbackC * (levelC/2));
+							break;
+						case 6:
+							levelB = B.get_lvl();
+							levelC = C.get_lvl();
+							wet = (playbackB * (levelB/2)) + (playbackC * (levelC/2));
+							break;
+						case 7:
+							levelA = A.get_lvl();
+							levelB = B.get_lvl();
+							levelC = C.get_lvl();
+							wet = (playbackA * (levelA/3)) + (playbackB * (levelB/3)) + (playbackC *  (levelC/3));
+							break;
+					}
+				}
+				else wet = dry;
+			}
+			/* FIXME:
+				Level logic in switch (playCondition) statements is suboptimal
+				and should still be refined.
+				The main issue that when a loop has been recorded but its volume
+				is turned down, the other loops should be able to "fill the void".
+				As it stands now, each channel occupies a equal fraction to the
+				number of recorded channels. If 2 channels have been recorded, the
+				channels can, at most, occupy 1/2 of the total voluem. If 3 channels 
+				have been recorded, 1/3.
+			*/
 
 			cf.SetPos(mix);
 			float output = cf.Process(dry, wet);
 			out[0][i] = output * (vol * 2);
 		}
-		
 	}
 }
