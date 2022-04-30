@@ -3,7 +3,7 @@
 //
 // Three Channel Looper
 // 
-// Apr 2022, Stephen Johnson
+// May 2022, Stephen Johnson
 
 #include "daisy_seed.h"
 #include "daisysp.h"
