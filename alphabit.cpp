@@ -13,7 +13,7 @@ using namespace daisy;
 using namespace daisy::seed;
 using namespace daisysp;
 
-const std::string ver = "alphabit_ver_00a";
+const std::string ver = "alphabit_00a";
 const std::string notes = "Tested. Working as intended."
 						  "New this Ver:"
 						  "---	Fixed fsw Handle() results."
