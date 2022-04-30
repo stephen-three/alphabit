@@ -1,5 +1,5 @@
 // alphabit.cpp
-// beta_14_00
+// ver_00a
 //
 // Three Channel Looper
 // 
@@ -13,7 +13,7 @@ using namespace daisy;
 using namespace daisy::seed;
 using namespace daisysp;
 
-const std::string ver = "alphabit_beta_14";
+const std::string ver = "alphabit_ver_00a";
 const std::string notes = "Tested. Working as intended."
 						  "New this Ver:"
 						  "---	Fixed fsw Handle() results."
