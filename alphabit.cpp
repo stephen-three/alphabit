@@ -14,11 +14,10 @@ using namespace daisy::seed;
 using namespace daisysp;
 
 const std::string ver = "alphabit_beta_14";
-const std::string notes = "Tested. Working as intended"
-						  "except for Tone ghost knobs being auto-set in Ghost Knobs"
+const std::string notes = "Tested. Working as intended."
 						  "New this Ver:"
 						  "---	Fixed fsw Handle() results."
-						  "---	Re-added ghost knob functionality"
+						  "---	Fully fixed ghost knob functionalities."
 						  "---	Refactored based on the fsw Handle() toggling loop.play"
 						  "		instead of controlling it with the ON-OFF-ON swithes."
 						  "---	Eliminated need for loop.GetReference() and deleted it."
@@ -34,13 +33,6 @@ const std::string notes = "Tested. Working as intended"
 						  "		the start of a hold.)";
 
 /*	TODO:
-	FIXME in Controls() { if (ghostKnobs) }
-	Improve ghost knob functionality-
-		Filter is being automatically set, even when unintended.
-		This is happening because the program is not properly
-		waiting for a change to the value to set the filter.
-		The upper limit is also currently not being reached even 
-		when the knob is fully CW.
 	FIXME in LoopChannel::WriteBuffer()
 	Improve overdub volume control-
 		The current math pushes the overdubs toward silence too
@@ -50,11 +42,6 @@ const std::string notes = "Tested. Working as intended"
 		The current math does not account for if one of the
 		channels is not full volume and changes to the playCondition
 		are instant, producing (possibly undesirable) jumps in volume.
-	FIXME in AudioCallback() when mode == 1
-	Elimante logical error
-		When mode == 1, but no loop is recorded on chA, you should hear
-		the dry signal. You should also hear the dry when a loop is being
-		recorded on a secondary channel.
 	The slight difference between starting recording and releasing the
 		to end recording could possibly be corrected with a delayed call
 		to stop_rec() (delayed by the holdTime amount)
@@ -828,8 +815,12 @@ void Controls()
 	// footswitches
 	uint8_t fswCommand;
 	fswCommand = fsw.Handle(1000);
-	static bool ghostKnobs = false;
 	static bool clearing = false;
+	static bool ghostKnobs = false;
+	static bool gk_takeBench = true;
+	static uint16_t freqA_benchMark = 0;
+	static uint16_t freqB_benchMark = 0;
+	static uint16_t freqC_benchMark = 0;
 	switch(fswCommand)
 	{
 		case 0:
@@ -848,26 +839,37 @@ void Controls()
 			{
 				A.ResetBuffer();
 				clearing = true;
+				setFltrA = false;
 			}
 
 			if(B.resetEnabled())
 			{
 				B.ResetBuffer();
 				clearing = true;
+				setFltrB = false;
 			}
 
 			if(C.resetEnabled())
 			{
 				C.ResetBuffer();
 				clearing = true;
+				setFltrC = false;
 			}
 			break;
 		case 3:
 			// ghost knobs
 			ghostKnobs = true;
+			if (gk_takeBench)
+			{
+				freqA_benchMark = hw.adc.Get(lvlApot) / 64;
+				freqB_benchMark = hw.adc.Get(lvlBpot) / 64;
+				freqC_benchMark = hw.adc.Get(lvlCpot) / 64;
+				gk_takeBench = false;
+			}
 			break;
 		case 4:
 			ghostKnobs = false;
+			gk_takeBench = true;
 			break;
 	}
 
@@ -1092,37 +1094,13 @@ void Controls()
 
 	if (ghostKnobs)
 	{
-		/* FIXME:
-			GhostKnobs is automatically setting the tone knob,
-			without (as intended) waiting for a change.
+		uint16_t freqA = hw.adc.Get(lvlApot) / 64;
+		uint16_t freqB = hw.adc.Get(lvlBpot) / 64;
+		uint16_t freqC = hw.adc.Get(lvlCpot) / 64;
 
-			Try out: if (prevFreqA > freqA + 3 || prevFreqA < freqA - 3)
-		*/
-		uint8_t freqA = hw.adc.Get(lvlApot) / 64;
-		uint8_t freqB = hw.adc.Get(lvlBpot) / 64;
-		uint8_t freqC = hw.adc.Get(lvlCpot) / 64;
-		static uint8_t prevFreqA = 0;
-		static uint8_t prevFreqB = 0;
-		static uint8_t prevFreqC = 0;
-		static uint8_t db = 3;
-		if (++db > 3)
-		{
-			prevFreqA = freqA;
-			prevFreqB = freqB;
-			prevFreqC = freqC;
-			db = 0;
-		}
-
-		// PotMonitor<uint16_t, 3> gkMonitor;
-		// UiEventQueue q;
-		// uint16_t abc = 0;
-		// gkMonitor.Init(q, abc);
-		// if (gkMonitor.IsMoving(0))
-		// {
-
-		// }
 		float freq;
-		if (prevFreqA != freqA)
+		// if (freq != freqA_benchMark) with a small window for misreadings
+		if (freqA > freqA_benchMark + 2 || freqA < freqA_benchMark - 2)
 		{
 			if (freqA > FLTR_OFF) 
 			{
@@ -1135,10 +1113,10 @@ void Controls()
 				freq = remap(freqA, FLTR_OFF, 0, FREQ_MAX, FREQ_MIN); 
 				fltrA.SetFreq(freq); 
 			}
-
+			freqA_benchMark = freqA;
 		}
 
-		if (prevFreqB != freqB)
+		if (freqB > freqB_benchMark + 2 || freqB < freqB_benchMark - 2)
 		{
 			if (freqB > FLTR_OFF) 
 			{
@@ -1150,9 +1128,10 @@ void Controls()
 				freq = remap(freqB, FLTR_OFF, 0, FREQ_MAX, FREQ_MIN); 
 				fltrB.SetFreq(freq); 
 			}
+			freqB_benchMark = freqB;
 		}
 
-		if (prevFreqC != freqC)
+		if (freqC > freqC_benchMark + 2 || freqC < freqC_benchMark - 2)
 		{
 			if (freqC > FLTR_OFF) 
 			{
@@ -1164,6 +1143,7 @@ void Controls()
 				freq = remap(freqC, FLTR_OFF, 0, FREQ_MAX, FREQ_MIN); 
 				fltrC.SetFreq(freq); 
 			}
+			freqC_benchMark = freqC;
 		}
 	}
 	else
