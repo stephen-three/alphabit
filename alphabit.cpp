@@ -14,11 +14,10 @@ using namespace daisy::seed;
 using namespace daisysp;
 
 const std::string ver = "alphabit_beta_14";
-const std::string notes = "Tested. Working as intended"
-						  "except for Tone ghost knobs being auto-set in Ghost Knobs"
+const std::string notes = "Tested. Working as intended."
 						  "New this Ver:"
 						  "---	Fixed fsw Handle() results."
-						  "---	Re-added ghost knob functionality"
+						  "---	Fully fixed ghost knob functionalities."
 						  "---	Refactored based on the fsw Handle() toggling loop.play"
 						  "		instead of controlling it with the ON-OFF-ON swithes."
 						  "---	Eliminated need for loop.GetReference() and deleted it."
@@ -34,13 +33,6 @@ const std::string notes = "Tested. Working as intended"
 						  "		the start of a hold.)";
 
 /*	TODO:
-	FIXME in Controls() { if (ghostKnobs) }
-	Improve ghost knob functionality-
-		Filter is being automatically set, even when unintended.
-		This is happening because the program is not properly
-		waiting for a change to the value to set the filter.
-		The upper limit is also currently not being reached even 
-		when the knob is fully CW.
 	FIXME in LoopChannel::WriteBuffer()
 	Improve overdub volume control-
 		The current math pushes the overdubs toward silence too
@@ -701,7 +693,9 @@ void LoopChannel::WriteBuffer(daisy::AudioHandle::InputBuffer in, size_t i)
 	/* FIXME:
 		This method of overdub volume control gradually pushes towards silence.
 		The volume is noticeably too quiet after just a couple passes.
-		This is not a viable alternative and needs to be corrected.
+		This may not be a viable alternative and needs to be corrected.
+		On the other hand, it does create an interesting delay effect.
+		Is there a possible comprosmise
 	*/
 }
 
@@ -819,8 +813,12 @@ void Controls()
 	// footswitches
 	uint8_t fswCommand;
 	fswCommand = fsw.Handle(1000);
-	static bool ghostKnobs = false;
 	static bool clearing = false;
+	static bool ghostKnobs = false;
+	static bool gk_takeBench = true;
+	static uint16_t freqA_benchMark = 0;
+	static uint16_t freqB_benchMark = 0;
+	static uint16_t freqC_benchMark = 0;
 	switch(fswCommand)
 	{
 		case 0:
@@ -839,26 +837,37 @@ void Controls()
 			{
 				A.ResetBuffer();
 				clearing = true;
+				setFltrA = false;
 			}
 
 			if(B.resetEnabled())
 			{
 				B.ResetBuffer();
 				clearing = true;
+				setFltrB = false;
 			}
 
 			if(C.resetEnabled())
 			{
 				C.ResetBuffer();
 				clearing = true;
+				setFltrC = false;
 			}
 			break;
 		case 3:
 			// ghost knobs
 			ghostKnobs = true;
+			if (gk_takeBench)
+			{
+				freqA_benchMark = hw.adc.Get(lvlApot) / 64;
+				freqB_benchMark = hw.adc.Get(lvlBpot) / 64;
+				freqC_benchMark = hw.adc.Get(lvlCpot) / 64;
+				gk_takeBench = false;
+			}
 			break;
 		case 4:
 			ghostKnobs = false;
+			gk_takeBench = true;
 			break;
 	}
 
@@ -1083,29 +1092,13 @@ void Controls()
 
 	if (ghostKnobs)
 	{
-		/* FIXME:
-			GhostKnobs is automatically setting the tone knob,
-			without (as intended) waiting for a change.
-
-			Try out: if (prevFreqA > freqA + 3 || prevFreqA < freqA - 3)
-		*/
-		uint8_t freqA = hw.adc.Get(lvlApot) / 64;
-		uint8_t freqB = hw.adc.Get(lvlBpot) / 64;
-		uint8_t freqC = hw.adc.Get(lvlCpot) / 64;
-		static uint8_t prevFreqA = 0;
-		static uint8_t prevFreqB = 0;
-		static uint8_t prevFreqC = 0;
-		static uint8_t db = 3;
-		if (++db > 3)
-		{
-			prevFreqA = freqA;
-			prevFreqB = freqB;
-			prevFreqC = freqC;
-			db = 0;
-		}
+		uint16_t freqA = hw.adc.Get(lvlApot) / 64;
+		uint16_t freqB = hw.adc.Get(lvlBpot) / 64;
+		uint16_t freqC = hw.adc.Get(lvlCpot) / 64;
 
 		float freq;
-		if (prevFreqA != freqA)
+		// if (freq != freqA_benchMark) with a small window for misreadings
+		if (freqA > freqA_benchMark + 2 || freqA < freqA_benchMark - 2)
 		{
 			if (freqA > FLTR_OFF) 
 			{
@@ -1118,10 +1111,10 @@ void Controls()
 				freq = remap(freqA, FLTR_OFF, 0, FREQ_MAX, FREQ_MIN); 
 				fltrA.SetFreq(freq); 
 			}
-
+			freqA_benchMark = freqA;
 		}
 
-		if (prevFreqB != freqB)
+		if (freqB > freqB_benchMark + 2 || freqB < freqB_benchMark - 2)
 		{
 			if (freqB > FLTR_OFF) 
 			{
@@ -1133,9 +1126,10 @@ void Controls()
 				freq = remap(freqB, FLTR_OFF, 0, FREQ_MAX, FREQ_MIN); 
 				fltrB.SetFreq(freq); 
 			}
+			freqB_benchMark = freqB;
 		}
 
-		if (prevFreqC != freqC)
+		if (freqC > freqC_benchMark + 2 || freqC < freqC_benchMark - 2)
 		{
 			if (freqC > FLTR_OFF) 
 			{
@@ -1147,6 +1141,7 @@ void Controls()
 				freq = remap(freqC, FLTR_OFF, 0, FREQ_MAX, FREQ_MIN); 
 				fltrC.SetFreq(freq); 
 			}
+			freqC_benchMark = freqC;
 		}
 	}
 	else
