@@ -353,13 +353,12 @@ int main(void)
 	hw.adc.Init(adc_config, NUM_ADC_CHANNELS);
 	hw.adc.Start();
 	// startup animation
-	{	
-		bypR.Write(false);
-		bypGB.Write(false);
-		ledR.Write(false);
-		ledG.Write(false);
-		ledB.Write(false);
-		//---------------
+	bypR.Write(false);
+	bypGB.Write(false);
+	ledR.Write(false);
+	ledG.Write(false);
+	ledB.Write(false);
+	{
 		ledR.Write(true);
 		ledB.Write(true);
 		uint32_t time = System::GetNow();
@@ -944,35 +943,35 @@ void Controls()
 		fswCommand = fswC.Handle(70);
 		switch (fswCommand)
 		{
-		case 0:
-			break;
-		case 1:
-			if (mode == 1)
-			{
-				C.set_play(!C.get_play());
-			}
-			else 
-			{
-				C.toggle_play();
-			}
-			break;
-		case 2:
-			if (C.resetEnabled())
-			{
-				C.ResetBuffer();
-				clearing = true;
-				setFltrC = false;
-			}
-			break;
-		case 3:
-			C.start_REC();
-			break;
-		case 4:
-			if (C.get_rec())
-			{
-				C.stop_REC();
-			}
-			break;
+			case 0:
+				break;
+			case 1:
+				if (mode == 1)
+				{
+					C.set_play(!C.get_play());
+				}
+				else 
+				{
+					C.toggle_play();
+				}
+				break;
+			case 2:
+				if (C.resetEnabled())
+				{
+					C.ResetBuffer();
+					clearing = true;
+					setFltrC = false;
+				}
+				break;
+			case 3:
+				C.start_REC();
+				break;
+			case 4:
+				if (C.get_rec())
+				{
+					C.stop_REC();
+				}
+				break;
 		}
 	
 	}
@@ -1097,7 +1096,7 @@ void Controls()
 		uint16_t freqC = hw.adc.Get(lvlCpot) / 64;
 
 		float freq;
-		// if (freq != freqA_benchMark) with a small window for misreadings
+		// if (freqA != freqA_benchMark) with a small window for misreadings
 		if (freqA > freqA_benchMark + 2 || freqA < freqA_benchMark - 2)
 		{
 			if (freqA > FLTR_OFF) 
