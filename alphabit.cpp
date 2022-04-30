@@ -468,7 +468,7 @@ void LoopChannel::NextSample(float &playback, daisy::AudioHandle::InputBuffer in
 	if (len >= size) 
 	{
 		first = false;
-		pass = 0;
+		pass = 0; // pass++; Re-factor pass to only increment when len > mod || len > size
 		mod = size;
 		len = 0;
 	}
