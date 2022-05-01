@@ -300,11 +300,6 @@ LoopChannel A(loopA, MAX_SIZE); // primary channel
 LoopChannel B(loopB, MAX_SIZE); // secondary
 LoopChannel C(loopC, MAX_SIZE); // secondary
 
-Footswitch fsw(D26);
-Footswitch fswA(D27);
-Footswitch fswB(D29);
-Footswitch fswC(D30);
-
 long remap(
 			const long &x, 
 			const long &inMin, 
@@ -468,6 +463,7 @@ void LoopChannel::NextSample(float &playback, daisy::AudioHandle::InputBuffer in
 	if (len >= size) 
 	{
 		first = false;
+		// FIXME: pass
 		pass = 0; // pass++; Re-factor pass to only increment when len > mod || len > size
 		mod = size;
 		len = 0;
@@ -774,6 +770,11 @@ long remap(const long &x, const long &inMin, const long &inMax, const long &outM
 
 void Controls()
 {
+	static Footswitch fsw(D26);
+	static Footswitch fswA(D27);
+	static Footswitch fswB(D29);
+	static Footswitch fswC(D30);
+
 	uint16_t md = hw.adc.Get(modeSw) / 64; // value: 0-65536/64 = 0-1024
 	if (md < 124) mode = 1;
 	else if (md < 900) mode = 3;
