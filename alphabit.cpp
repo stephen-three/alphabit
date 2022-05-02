@@ -464,14 +464,10 @@ void LoopChannel::NextSample(float &playback, daisy::AudioHandle::InputBuffer in
 	if (len >= size) 
 	{
 		first = false;
-		// FIXME: pass
-		pass = 0; // pass++; Re-factor pass to only increment when len > mod || len > size
+		pass++;
 		mod = size;
 		len = 0;
 	}
-
-	// if (pass > 1 && len > mod)
-	// pass++; len = 0; 
 
 	if (play) 
 	{
@@ -539,7 +535,7 @@ void LoopChannel::NextSample_1(float &playback, daisy::AudioHandle::InputBuffer 
 	if (len >= size)
 	{
 		first = false;
-		pass = 0;
+		pass++;
 		mod = size;
 		len = 0;
 	}
@@ -611,15 +607,15 @@ void LoopChannel::NextSample_2(float &playback, daisy::AudioHandle::InputBuffer 
 	if (len >= size)
 	{
 		first = false;
-		pass = 0;
+		pass++;
 		mod = size;
 		len = 0;
 	}
 
 	if (a->recorded && recorded)
 	{
-		double retime = 0;
-		retime = double(mod) / double(a->mod);
+		float retime = 0;
+		retime = float(mod) / float(a->mod);
 		playbackSpeed = retime * a->playbackSpeed;
 	}
 
