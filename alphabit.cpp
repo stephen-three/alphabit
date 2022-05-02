@@ -174,6 +174,7 @@ private:
 
 	void Shift_position();
 
+	// called in NextSample_1()
 	void Shift_position(LoopChannel* a);
 };
 
@@ -188,9 +189,8 @@ private:
 	bool snglOK;
 	long rleasTime;
 	bool ignrRelease;
-	bool waitRelease;
+	bool waitForRelease;
 	bool hold;
-	const static uint16_t waitPrd = 1000; // unnecessary?
 	const static uint8_t dcTimeOut = 200;
 
 public:
@@ -203,7 +203,7 @@ public:
 				snglOK(true),
 				rleasTime(-1),
 				ignrRelease(false),
-				waitRelease(false),
+				waitForRelease(false),
 				hold(false)
 	{
 		fsw.Init(pin, 0.f, Switch::TYPE_MOMENTARY, Switch::POLARITY_INVERTED, Switch::PULL_UP);
@@ -289,7 +289,6 @@ int main(void)
 {
 	hw.Init();
 	hw.SetAudioBlockSize(4); // number of samples handled per callback
-	// change to 48, 96 ^^^ ? !final form
 	hw.SetAudioSampleRate(SaiHandle::Config::SampleRate::SAI_96KHZ);
 	float sample_rate = hw.AudioSampleRate();
 	cf.Init();
@@ -545,7 +544,7 @@ void LoopChannel::Shift_position()
 			if (rvrs) position -= pushVal;
 			else position += pushVal;
 		}
-		if (rvrs && (position <= 0 || position >= mod)) position = mod;
+		if (rvrs && position < 0) position = mod;
 		else position %= mod;
 	}
 }
@@ -591,7 +590,7 @@ void LoopChannel::Shift_position(LoopChannel* a)
 			else position += pushVal;
 		}
 		// !!!
-		if (rvrs && (position <= 0 || position >= mod))
+		if (rvrs && position < 0)
 		{
 			position = a->mod;
 		}
@@ -613,7 +612,7 @@ int Footswitch::Handle(uint16_t holdTime /* =600 */)
 	if (live && !last)
 	{
 		ignrRelease = false;
-		waitRelease = false;
+		waitForRelease = false;
 		snglOK = true;
 		hold = false;
 
@@ -657,7 +656,7 @@ int Footswitch::Handle(uint16_t holdTime /* =600 */)
 		if (!hold)
 		{
 			input = 3;
-			waitRelease = true;
+			waitForRelease = true;
 			ignrRelease = true;
 			dcWhenReleased = false;
 			dcWait = false;
@@ -1181,7 +1180,7 @@ void AudioCallback(AudioHandle::InputBuffer in, AudioHandle::OutputBuffer out, s
 		{
 			out[0][i] = dry;
 			/* !final form
-				This would be unnecessary? with the Relay bypass
+				This would be unnecessary with the Relay bypass
 			*/
 		}
 		else
