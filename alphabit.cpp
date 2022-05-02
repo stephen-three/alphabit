@@ -1020,7 +1020,6 @@ void Controls()
 				break;
 			case 1:
 				// toggle REC
-
 				if (B.get_rec())
 				{
 					B.stop_REC();
