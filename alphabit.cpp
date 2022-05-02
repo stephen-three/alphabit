@@ -40,7 +40,6 @@ const std::string notes = "Tested. Working as intended."
 */
 
 #define MAX_SIZE (96000 * 30) // 30 sec of floats at 96 kHz
-// 2,880,000
 #define FREQ_MAX 2000 // 2kHz
 #define FREQ_MIN 50 // 50Hz
 #define FLTR_OFF 1006
