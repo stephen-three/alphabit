@@ -177,6 +177,10 @@ public:
 
 private:
 	void WriteBuffer(daisy::AudioHandle::InputBuffer in, size_t i);
+
+	void Shift_position();
+
+	void Shift_position(LoopChannel* a);
 };
 
 class Footswitch
@@ -455,54 +459,7 @@ void LoopChannel::NextSample(float &playback, daisy::AudioHandle::InputBuffer in
 		len = 0;
 	}
 
-	if (play) 
-	{
-		if (rec)
-		{
-			// Playback is unaffected by the Time & Rvrs when recording
-			position++;
-			position %= mod;
-		}
-		else 
-		{
-			// playbackSpeed...
-			if (playbackSpeed < 100)
-			{
-				indexTracker += playbackSpeed;
-				if (indexTracker >= 100)
-				{
-					if (rvrs) position--;
-					else position++;
-					indexTracker -= 100;
-				}
-			}
-			// normal playback
-			else if (playbackSpeed == 100)
-			{
-				if (rvrs) position--;
-				else position++;
-			}
-			// compress…
-			else if (playbackSpeed > 100)
-			{
-				float rate = float(playbackSpeed)/100.f; // divide by 100 to get into the proper range (0.25-4.0)
-				uint8_t rateTRUNC = rate; // truncate the float value
-				rateRemainder += rate - rateTRUNC; 
-				pushVal = rateTRUNC;
-				if (rateRemainder >= 1.f)
-				{
-					uint8_t remainTRUNC = rateRemainder;
-					float remainMod = rateRemainder - remainTRUNC;
-					rateRemainder = remainMod;
-					pushVal += remainTRUNC;
-				}
-				if (rvrs) position -= pushVal;
-				else position += pushVal;
-			}
-			if (rvrs && (position <= 0 || position >= mod)) position = mod;
-			else position %= mod;
-		}
-	}
+	if (play) Shift_position();
 }
 
 void LoopChannel::NextSample_1(float &playback, daisy::AudioHandle::InputBuffer in, size_t i, LoopChannel* a)
@@ -524,57 +481,7 @@ void LoopChannel::NextSample_1(float &playback, daisy::AudioHandle::InputBuffer 
 		len = 0;
 	}
 
-	if (play)
-	{
-		if (rec)
-		{
-			position++;
-			position %= mod;
-		}
-		else
-		{
-			if (playbackSpeed < 100)
-			{
-				indexTracker += playbackSpeed;
-				if (indexTracker >= 100)
-				{
-					if (rvrs) position--;
-					else position++;
-					indexTracker -= 100;
-				}
-			}
-			else if (playbackSpeed == 100)
-			{
-				if (rvrs) position--;
-				else position++;
-			}
-			else if (playbackSpeed > 100)
-			{
-				float rate = float(playbackSpeed)/100.f;
-				uint8_t rateTRUNC = rate;
-				rateRemainder += rate - rateTRUNC;
-				pushVal = rateTRUNC;
-				if (rateRemainder >= 1.f)
-				{
-					uint8_t remainTRUNC = rateRemainder;
-					float remainMod = rateRemainder - remainTRUNC;
-					rateRemainder = remainMod;
-					pushVal += remainTRUNC;
-				}
-				if (rvrs) position -= pushVal;
-				else position += pushVal;
-			}
-
-			if (rvrs && (position <= 0 || position >= mod))
-			{
-				position = a->mod;
-			}
-			else
-			{
-				position %= a->mod;
-			}
-		}
-	}
+	if (play) Shift_position(a);
 }
 
 void LoopChannel::NextSample_2(float &playback, daisy::AudioHandle::InputBuffer in, size_t i, LoopChannel* a)
@@ -603,55 +510,7 @@ void LoopChannel::NextSample_2(float &playback, daisy::AudioHandle::InputBuffer 
 		playbackSpeed = retime * a->playbackSpeed;
 	}
 
-	if (play)
-	{
-		if (rec)
-		{
-			position++;
-			position %= mod;
-		}
-		else
-		{
-			if (playbackSpeed < 100)
-			{
-				indexTracker += playbackSpeed;
-				if (indexTracker >= 100)
-				{
-					if (rvrs) position--;
-					else position++;
-					indexTracker -= 100;
-				}
-			}
-			else if (playbackSpeed == 100)
-			{
-				if (rvrs) position--;
-				else position++;
-			}
-			else if (playbackSpeed > 100)
-			{
-				float rate = float(playbackSpeed) / 100.f;
-				uint8_t rateTRUNC = rate;
-				rateRemainder += rate - rateTRUNC;
-				pushVal = rateTRUNC;
-				if (rateRemainder >= 1.f)
-				{
-					uint8_t remainTRUNC = rateRemainder;
-					float remainMod = rateRemainder - remainTRUNC;
-					rateRemainder = remainMod;
-					pushVal += remainTRUNC;
-				}
-
-				if (rvrs) position -= pushVal;
-				else position += pushVal;
-			}
-
-			if (rvrs && (position <= 0 || position >= mod))
-			{
-				position = mod;
-			}
-			else position %= mod;
-		}
-	}
+	if (play) Shift_position();
 }
 
 void LoopChannel::WriteBuffer(daisy::AudioHandle::InputBuffer in, size_t i)
@@ -662,6 +521,108 @@ void LoopChannel::WriteBuffer(daisy::AudioHandle::InputBuffer in, size_t i)
 		len++;
 	}
 	else p_loop[position] = (p_loop[position] * 0.5) + (in[0][i] * 0.5);
+}
+
+void LoopChannel::Shift_position()
+{
+	if (rec)
+	{
+		// Playback is unaffected by the Time & Rvrs when recording
+		position++;
+		position %= mod;
+	}
+	else 
+	{
+		// playbackSpeed...
+		// stretch
+		if (playbackSpeed < 100)
+		{
+			indexTracker += playbackSpeed;
+			if (indexTracker >= 100)
+			{
+				if (rvrs) position--;
+				else position++;
+				indexTracker -= 100;
+			}
+		}
+		// normal playback
+		else if (playbackSpeed == 100)
+		{
+			if (rvrs) position--;
+			else position++;
+		}
+		// compress
+		else if (playbackSpeed > 100)
+		{
+			float rate = float(playbackSpeed)/100.f; // divide by 100 to get into the proper range (0.25-4.0)
+			uint8_t rateTRUNC = rate; // truncate the float value
+			rateRemainder += rate - rateTRUNC; 
+			pushVal = rateTRUNC;
+			if (rateRemainder >= 1.f)
+			{
+				uint8_t remainTRUNC = rateRemainder;
+				float remainMod = rateRemainder - remainTRUNC;
+				rateRemainder = remainMod;
+				pushVal += remainTRUNC;
+			}
+			if (rvrs) position -= pushVal;
+			else position += pushVal;
+		}
+		if (rvrs && (position <= 0 || position >= mod)) position = mod;
+		else position %= mod;
+	}
+}
+
+void LoopChannel::Shift_position(LoopChannel* a)
+{
+	if (rec)
+	{
+		position++;
+		position %= mod;
+	}
+	else
+	{
+		if (playbackSpeed < 100)
+		{
+			indexTracker += playbackSpeed;
+			if (indexTracker >= 100)
+			{
+				if (rvrs) position--;
+				else position++;
+				indexTracker -= 100;
+			}
+		}
+		else if (playbackSpeed == 100)
+		{
+			if (rvrs) position--;
+			else position++;
+		}
+		else if (playbackSpeed > 100)
+		{
+			float rate = float(playbackSpeed)/100.f;
+			uint8_t rateTRUNC = rate;
+			rateRemainder += rate - rateTRUNC;
+			pushVal = rateTRUNC;
+			if (rateRemainder >= 1.f)
+			{
+				uint8_t remainTRUNC = rateRemainder;
+				float remainMod = rateRemainder - remainTRUNC;
+				rateRemainder = remainMod;
+				pushVal += remainTRUNC;
+			}
+			if (rvrs) position -= pushVal;
+			else position += pushVal;
+		}
+		// !!!
+		if (rvrs && (position <= 0 || position >= mod))
+		{
+			position = a->mod;
+		}
+		else
+		{
+			position %= a->mod;
+		}
+	}
 }
 
 int Footswitch::Handle(uint16_t holdTime /* =600 */)
