@@ -469,6 +469,9 @@ void LoopChannel::NextSample(float &playback, daisy::AudioHandle::InputBuffer in
 		len = 0;
 	}
 
+	// if (pass > 1 && len > mod)
+	// pass++; len = 0; 
+
 	if (play) 
 	{
 		if (rec)
