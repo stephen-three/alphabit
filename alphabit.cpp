@@ -422,6 +422,7 @@ void LoopChannel::latch_REC()
 		mod = len;
 		len = 0;
 	}
+	if (!rec) pass++;
 	reset = true;
 	play = true;
 	rec = !rec;
@@ -895,7 +896,10 @@ void Controls()
 				}
 				break;
 			case 3:
-				A.start_REC();
+				if (!A.get_rec())
+				{
+					A.start_REC();
+				}
 				break;
 			case 4:
 				if (A.get_rec())
@@ -931,7 +935,10 @@ void Controls()
 				}
 				break;
 			case 3:
-				B.start_REC();
+				if (!B.get_rec())
+				{
+					B.start_REC();
+				}
 				break;
 			case 4:
 				if (B.get_rec())
@@ -965,7 +972,10 @@ void Controls()
 				}
 				break;
 			case 3:
-				C.start_REC();
+				if (!C.get_rec())
+				{
+					C.start_REC();
+				}
 				break;
 			case 4:
 				if (C.get_rec())
