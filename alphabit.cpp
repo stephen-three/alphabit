@@ -33,14 +33,6 @@ const std::string notes = "Tested. Working as intended."
 						  "		the start of a hold.)";
 
 /*	TODO:
-	FIXME in LoopChannel::WriteBuffer()
-	Improve overdub volume control-
-		The current math pushes the overdubs toward silence too
-		quickly. By the third pass on a loop, the volume of incoming
-		signal is nearly inaudible. This signal should be retained.
-		Is there a compromise with this method that would still allow
-		for the bonus of a delay when the loop duration is short and
-		the fsw is held down, continually overdubbing.
 	FIXME in AudioCallback() { if (byp) else ... }
 	Improve level logic-
 		The current math does not account for if one of the
@@ -432,7 +424,6 @@ void LoopChannel::ClearLoop()
 {
 	for (int i = 0; i < mod; i++) {
 		p_loop[i] = 0.f;
-
 	}
 }
 
@@ -497,14 +488,12 @@ void LoopChannel::NextSample(float &playback, daisy::AudioHandle::InputBuffer in
 			{
 				if (rvrs) position--;
 				else position++;
-				// Ternary operator
 			}
 			// compress…
 			else if (playbackSpeed > 100)
 			{
 				float rate = float(playbackSpeed)/100.f; // divide by 100 to get into the proper range (0.25-4.0)
-				// truncate the float value
-				uint8_t rateTRUNC = rate;
+				uint8_t rateTRUNC = rate; // truncate the float value
 				rateRemainder += rate - rateTRUNC; 
 				pushVal = rateTRUNC;
 				if (rateRemainder >= 1.f)
@@ -529,8 +518,10 @@ void LoopChannel::NextSample_1(float &playback, daisy::AudioHandle::InputBuffer 
 	{
 		WriteBuffer(in, i);
 		recorded = true;
+		// if recording, playback = this->loop, which is set in WriteBuffer()
 		playback = p_loop[position];
 	}
+	// get playback from A's loop based on this->position
 	else playback = a->p_loop[this->position];
 
 	if (len >= size)
@@ -613,6 +604,7 @@ void LoopChannel::NextSample_2(float &playback, daisy::AudioHandle::InputBuffer 
 		len = 0;
 	}
 
+	// if both chA and this have a recorded loop, retime this->loop based on chA
 	if (a->recorded && recorded)
 	{
 		float retime = 0;
@@ -674,25 +666,12 @@ void LoopChannel::NextSample_2(float &playback, daisy::AudioHandle::InputBuffer 
 
 void LoopChannel::WriteBuffer(daisy::AudioHandle::InputBuffer in, size_t i)
 {
-
-	float crntFctr = 1.f / pass;
-	float prevFctr = 1.f / (pass - 1);
-	float factor = crntFctr * prevFctr;
-
 	if (first)
 	{
 		p_loop[position] = in[0][i];
 		len++;
 	}
-	// else p_loop[position] = (p_loop[position] * 0.5) + (in[0][i] * 0.5);
-	else p_loop[position] = (p_loop[position] * factor) + (in[0][i] * factor);
-	/* FIXME:
-		This method of overdub volume control gradually pushes towards silence.
-		The volume is noticeably too quiet after just a couple passes.
-		This may not be a viable alternative and needs to be corrected.
-		On the other hand, it does create an interesting delay effect.
-		Is there a possible comprosmise
-	*/
+	else p_loop[position] = (p_loop[position] * 0.5) + (in[0][i] * 0.5);
 }
 
 int Footswitch::Handle(uint16_t holdTime /* =600 */)
@@ -761,7 +740,6 @@ int Footswitch::Handle(uint16_t holdTime /* =600 */)
 	last = live;
 	return input;
 }
-
 
 // non-class functions
 long remap(const long &x, const long &inMin, const long &inMax, const long &outMin, const long &outMax)
