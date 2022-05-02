@@ -430,7 +430,8 @@ void LoopChannel::latch_REC()
 void LoopChannel::ClearLoop()
 {
 	for (int i = 0; i < mod; i++) {
-		*(p_loop + i) = 0.f;
+		p_loop[i] = 0.f;
+
 	}
 }
 
@@ -444,7 +445,7 @@ void LoopChannel::ResetBuffer()
 	len = 0;
 	position = 0;
 	for (int i = 0; i < mod; i++) {
-		*(p_loop + i) = 0.f;
+		p_loop[i] = 0.f;
 	}
 	mod = size;
 }
@@ -457,7 +458,7 @@ void LoopChannel::NextSample(float &playback, daisy::AudioHandle::InputBuffer in
 		recorded = true;
 	}
 
-	playback = *(p_loop + position);
+	playback = p_loop[position];
 
 	// automatic looptime
 	if (len >= size) 
@@ -531,9 +532,9 @@ void LoopChannel::NextSample_1(float &playback, daisy::AudioHandle::InputBuffer 
 	{
 		WriteBuffer(in, i);
 		recorded = true;
-		playback = *(p_loop + position);
+		playback = p_loop[position];
 	}
-	else playback = *(a->p_loop + this->position);
+	else playback = a->p_loop[this->position];
 
 	if (len >= size)
 	{
@@ -605,7 +606,7 @@ void LoopChannel::NextSample_2(float &playback, daisy::AudioHandle::InputBuffer 
 		recorded = true;
 	}
 
-	playback = *(p_loop + position);
+	playback = p_loop[position];
 
 	if (len >= size)
 	{
@@ -683,11 +684,11 @@ void LoopChannel::WriteBuffer(daisy::AudioHandle::InputBuffer in, size_t i)
 
 	if (first)
 	{
-		*(p_loop + position) = in[0][i];
+		p_loop[position] = in[0][i];
 		len++;
 	}
-	// else *(p_loop + position) = (*(p_loop + position) * 0.5) + (in[0][i] * 0.5);
-	else *(p_loop + position) = (*(p_loop + position) * factor) + (in[0][i] * factor);
+	// else p_loop[position] = (p_loop[position] * 0.5) + (in[0][i] * 0.5);
+	else p_loop[position] = (p_loop[position] * factor) + (in[0][i] * factor);
 	/* FIXME:
 		This method of overdub volume control gradually pushes towards silence.
 		The volume is noticeably too quiet after just a couple passes.
