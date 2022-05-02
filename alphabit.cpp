@@ -803,7 +803,7 @@ void Controls()
 
 	if (fswHOLD)
 	{
-		fswCommand = fswA.Handle(70);
+		fswCommand = fswA.Handle(90);
 		switch (fswCommand)
 		{
 			case 0:
@@ -838,7 +838,7 @@ void Controls()
 				break;
 		}
 	
-		fswCommand = fswB.Handle(70);
+		fswCommand = fswB.Handle(90);
 		switch (fswCommand)
 		{
 			case 0:
@@ -877,7 +877,7 @@ void Controls()
 				break;
 		}
 	
-		fswCommand = fswC.Handle(70);
+		fswCommand = fswC.Handle(90);
 		switch (fswCommand)
 		{
 			case 0:
