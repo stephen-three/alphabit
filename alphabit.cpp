@@ -191,26 +191,9 @@ private:
 	bool waitRelease;
 	bool hold;
 	const static uint16_t waitPrd = 1000; // unnecessary?
-	const static uint8_t dcTimeOut = 250;
+	const static uint8_t dcTimeOut = 200;
 
 public:
-	Footswitch()
-			:	live(false),
-				last(false),
-				dcWait(false),
-				dcWhenReleased(false),
-				snglOK(true),
-				rleasTime(-1),
-				ignrRelease(false),
-				waitRelease(false),
-				hold(false)
-	{
-		// daisy::Switch would need to be initialized externally
-		// but with full control of parameters
-		
-		// except it can't be initialized externally
-		// because the fsw member is private
-	}
 
 	Footswitch(daisy::Pin pin)
 			:	live(false),
