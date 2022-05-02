@@ -1,5 +1,5 @@
 // alphabit.cpp
-// ver_00a
+// ver_00b
 //
 // Three Channel Looper
 // 
@@ -13,7 +13,7 @@ using namespace daisy;
 using namespace daisy::seed;
 using namespace daisysp;
 
-const std::string ver = "alphabit_00a";
+const std::string ver = "alphabit_00b";
 const std::string notes = "Tested. Working as intended."
 						  "New this Ver:"
 						  "---	Fixed fsw Handle() results."
@@ -21,16 +21,10 @@ const std::string notes = "Tested. Working as intended."
 						  "---	Refactored based on the fsw Handle() toggling loop.play"
 						  "		instead of controlling it with the ON-OFF-ON swithes."
 						  "---	Eliminated need for loop.GetReference() and deleted it."
-						  "Next:		"
-						  "---	Limit basic type variables to only necessary ranges/sizes."
-						  "Version 15:	"
-						  "---	Fully fix ghost knob functionality"
-						  "Issues:		"
-						  "---	Audible squeak when clearing an 'empty' buffer"
-						  "		(in fswHOLD=false mode)"
-						  "		(The buffer should be empty but is recording bc"
-						  "		the footswitch - > Handle() method returns 1 at"
-						  "		the start of a hold.)";
+						  "---	Eliminated need for LoopChannel member pass & deleted it."
+						  "		Now using bool firstPass."
+						  "---	Limited basic types to only necessary sizes."
+						  "--- Eliminated Audible squeak when clearing buffer when !fswHOLD";
 
 /*	TODO:
 	FIXME in AudioCallback() { if (byp) else ... }
@@ -196,7 +190,7 @@ private:
 	bool ignrRelease;
 	bool waitRelease;
 	bool hold;
-	const static uint16_t waitPrd = 1000;
+	const static uint16_t waitPrd = 1000; // unnecessary?
 	const static uint8_t dcTimeOut = 250;
 
 public:
@@ -768,6 +762,11 @@ void Controls()
 				A.ResetBuffer();
 				clearing = true;
 				setFltrA = false;
+				if (mode == 1)
+				{
+					if (!B.get_recdd()) B.set_play(false);
+					if (!C.get_recdd()) C.set_play(false);
+				}
 			}
 
 			if(B.resetEnabled())
