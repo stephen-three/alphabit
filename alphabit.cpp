@@ -54,7 +54,7 @@ const std::string notes = "Tested. Working as intended."
 class LoopChannel
 {
 private:
-    bool first;
+    bool firstPass;
     bool rec;
     bool recorded;
     bool play;
@@ -70,11 +70,10 @@ private:
     int16_t indexTracker;
     float rateRemainder;
     uint8_t pushVal;
-    uint8_t pass;
 
 public:
     LoopChannel(float *loop, size_t sz) 
-	  : first(true),
+	  : firstPass(true),
 		rec(false),
 		recorded(false),
 		play(false),
@@ -89,8 +88,7 @@ public:
 		size(sz),
 		indexTracker(0),
 		rateRemainder(0.f),
-		pushVal(0),
-		pass(0)
+		pushVal(0)
 	{}
 
  // Getters
@@ -391,15 +389,14 @@ void LoopChannel::start_REC()
 	rec = true;
 	reset = true;
 	play = true;
-	pass++;
 }
 
 void LoopChannel::stop_REC()
 {
-	if (first && rec)
-	// first && recorded?
+	if (firstPass && rec)
+	// firstPass && recorded?
 	{
-		first = false;
+		firstPass = false;
 		mod = len;
 		len = 0;
 	}
@@ -408,13 +405,12 @@ void LoopChannel::stop_REC()
 
 void LoopChannel::latch_REC()
 {
-	if (first && rec)
+	if (firstPass && rec)
 	{
-		first = false;
+		firstPass = false;
 		mod = len;
 		len = 0;
 	}
-	if (!rec) pass++;
 	reset = true;
 	play = true;
 	rec = !rec;
@@ -429,8 +425,7 @@ void LoopChannel::ClearLoop()
 
 void LoopChannel::ResetBuffer()
 {
-	first = true;
-	pass = 0;
+	firstPass = true;
 	rec = false;
 	recorded = false;
 	play = false;
@@ -455,8 +450,7 @@ void LoopChannel::NextSample(float &playback, daisy::AudioHandle::InputBuffer in
 	// automatic looptime
 	if (len >= size) 
 	{
-		first = false;
-		pass++;
+		firstPass = false;
 		mod = size;
 		len = 0;
 	}
@@ -467,8 +461,7 @@ void LoopChannel::NextSample(float &playback, daisy::AudioHandle::InputBuffer in
 		{
 			// Playback is unaffected by the Time & Rvrs when recording
 			position++;
-			if (pass == 1) position %= len;
-			else position %= mod; 
+			position %= mod;
 		}
 		else 
 		{
@@ -526,8 +519,7 @@ void LoopChannel::NextSample_1(float &playback, daisy::AudioHandle::InputBuffer 
 
 	if (len >= size)
 	{
-		first = false;
-		pass++;
+		firstPass = false;
 		mod = size;
 		len = 0;
 	}
@@ -537,8 +529,7 @@ void LoopChannel::NextSample_1(float &playback, daisy::AudioHandle::InputBuffer 
 		if (rec)
 		{
 			position++;
-			if (pass == 1) position %= a->len;
-			else position %= a->mod;
+			position %= mod;
 		}
 		else
 		{
@@ -598,13 +589,13 @@ void LoopChannel::NextSample_2(float &playback, daisy::AudioHandle::InputBuffer 
 
 	if (len >= size)
 	{
-		first = false;
-		pass++;
+		firstPass = false;
 		mod = size;
 		len = 0;
 	}
 
-	// if both chA and this have a recorded loop, retime this->loop based on chA
+	// if both chA and this have a recorded loop
+	// retime this->loop based on chA
 	if (a->recorded && recorded)
 	{
 		float retime = 0;
@@ -617,8 +608,7 @@ void LoopChannel::NextSample_2(float &playback, daisy::AudioHandle::InputBuffer 
 		if (rec)
 		{
 			position++;
-			if (pass == 1) position %= len;
-			else position %= mod;
+			position %= mod;
 		}
 		else
 		{
@@ -666,7 +656,7 @@ void LoopChannel::NextSample_2(float &playback, daisy::AudioHandle::InputBuffer 
 
 void LoopChannel::WriteBuffer(daisy::AudioHandle::InputBuffer in, size_t i)
 {
-	if (first)
+	if (firstPass)
 	{
 		p_loop[position] = in[0][i];
 		len++;
