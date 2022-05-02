@@ -818,8 +818,8 @@ void Controls()
 					clearing = true;
 					if (mode == 1)
 					{
-						B.set_play(false);
-						C.set_play(false);
+						if (!B.get_recdd()) B.set_play(false);
+						if (!C.get_recdd()) C.set_play(false);
 					}
 					setFltrA = false;
 				}
@@ -944,8 +944,8 @@ void Controls()
 					clearing = true;
 					if (mode == 1)
 					{
-						B.set_play(false);
-						C.set_play(false);
+						if (!B.get_recdd()) B.set_play(false);
+						if (!C.get_recdd()) C.set_play(false);
 					}
 					setFltrA = false;
 				}
