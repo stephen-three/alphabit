@@ -10,7 +10,6 @@
 #include <string>
 
 using namespace daisy;
-using namespace daisy::seed;
 
 const std::string ver = "alphabit_00b";
 const std::string notes = "Tested. Working as intended."
@@ -295,6 +294,7 @@ int main(void)
 	fltrB.Init(sample_rate);
 	fltrC.Init(sample_rate);
 
+	using namespace daisy::seed;
 	adc_config[modeSw].InitSingle(A0);
 	adc_config[timeApot].InitSingle(A1);
 	adc_config[timeBpot].InitSingle(A2);
@@ -674,10 +674,10 @@ long remap(const long &x, const long &inMin, const long &inMax, const long &outM
 
 void Controls()
 {
-	static Footswitch fsw(D26);
-	static Footswitch fswA(D27);
-	static Footswitch fswB(D29);
-	static Footswitch fswC(D30);
+	static Footswitch fsw(daisy::seed::D26);
+	static Footswitch fswA(daisy::seed::D27);
+	static Footswitch fswB(daisy::seed::D29);
+	static Footswitch fswC(daisy::seed::D30);
 
 	uint16_t md = hw.adc.Get(modeSw) / 64; // value: 0-65536/64 = 0-1024
 	if (md < 124) mode = 1;
