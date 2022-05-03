@@ -268,7 +268,11 @@ long remap(
 
 float MakePlayback(uint8_t playCondition, const float playbacks[3], LoopChannel* channels[3]);
 
-void AudioCallback(daisy::AudioHandle::InputBuffer in, daisy::AudioHandle::OutputBuffer out, size_t size);
+void AudioCallback(
+					daisy::AudioHandle::InputBuffer in,
+					daisy::AudioHandle::OutputBuffer out, 
+					size_t size
+				  );
 
 
 
