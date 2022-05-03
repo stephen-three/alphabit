@@ -360,8 +360,6 @@ int main(void)
 	B.ClearLoop();
 	C.ClearLoop();
 
-
-
 	hw.StartAudio(AudioCallback);
 	while(1)
 	{	}
