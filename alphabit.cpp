@@ -189,17 +189,16 @@ private:
 	const static uint8_t dcTimeOut = 200;
 
 public:
-
 	Footswitch(daisy::Pin pin_assignment)
-			:	live(false),
-				last(false),
-				dcWait(false),
-				dcWhenReleased(false),
-				snglOK(true),
-				rleasTime(-1),
-				ignrRelease(false),
-				waitForRelease(false),
-				hold(false)
+	  :	live(false),
+		last(false),
+		dcWait(false),
+		dcWhenReleased(false),
+		snglOK(true),
+		rleasTime(-1),
+		ignrRelease(false),
+		waitForRelease(false),
+		hold(false)
 	{
 		using namespace daisy;
 		fswitch.Init(pin_assignment, 0.f, Switch::TYPE_MOMENTARY, Switch::POLARITY_INVERTED, Switch::PULL_UP);
