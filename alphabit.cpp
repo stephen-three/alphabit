@@ -1208,44 +1208,29 @@ void AudioCallback(daisy::AudioHandle::InputBuffer in, daisy::AudioHandle::Outpu
 				{
 					switch (playCondition)
 					{
-						float levelA;
-						float levelB;
-						float levelC;
 						case 0:
 							// loops recorded but no playbacks
 							break;
 						case 1:
-							levelA = A.get_lvl();
-							wet = playbackA * levelA;
+							wet = playbackA * A.get_lvl();
 							break;
 						case 2:
-							levelB = B.get_lvl();
-							wet = playbackB * levelB;
+							wet = playbackB * B.get_lvl();
 							break;
 						case 3:
-							levelA = A.get_lvl();
-							levelB = B.get_lvl();
-							wet = (playbackA * (levelA/2)) + (playbackB * (levelB/2));
+							wet = (playbackA * (A.get_lvl()/2)) + (playbackB * (B.get_lvl()/2));
 							break;
 						case 4:
-							levelC = C.get_lvl();
-							wet = playbackC * levelC;
+							wet = playbackC * C.get_lvl();
 							break;
 						case 5:
-							levelA = A.get_lvl();
-							levelC = C.get_lvl();
-							wet = (playbackA * (levelA/2)) + (playbackC * (levelC/2));
+							wet = (playbackA * (A.get_lvl()/2)) + (playbackC * (C.get_lvl()/2));
 							break;
 						case 6:
-							levelB = B.get_lvl();
-							levelC = C.get_lvl();
-							wet = (playbackB * (levelB/2)) + (playbackC * (levelC/2));
+							wet = (playbackB * (B.get_lvl()/2)) + (playbackC * (C.get_lvl()/2));
 							break;
 						case 7:
-							levelA = A.get_lvl();
-							levelB = B.get_lvl();
-							levelC = C.get_lvl();
-							wet = (playbackA * (levelA/3)) + (playbackB * (levelB/3)) + (playbackC *  (levelC/3));
+							wet = (playbackA * (A.get_lvl()/3)) + (playbackB * (B.get_lvl()/3)) + (playbackC *  (C.get_lvl()/3));
 							break;
 					}
 				}
@@ -1260,44 +1245,29 @@ void AudioCallback(daisy::AudioHandle::InputBuffer in, daisy::AudioHandle::Outpu
 				{
 					switch (playCondition)
 					{
-						float levelA;
-						float levelB;
-						float levelC;
 						case 0:
 							// loops recorded but no playbacks
 							break;
 						case 1:
-							levelA = A.get_lvl();
-							wet = playbackA * levelA;
+							wet = playbackA * A.get_lvl();
 							break;
 						case 2:
-							levelB = B.get_lvl();
-							wet = playbackB * levelB;
+							wet = playbackB * B.get_lvl();
 							break;
 						case 3:
-							levelA = A.get_lvl();
-							levelB = B.get_lvl();
-							wet = (playbackA * (levelA/2)) + (playbackB * (levelB/2));
+							wet = (playbackA * (A.get_lvl()/2)) + (playbackB * (B.get_lvl()/2));
 							break;
 						case 4:
-							levelC = C.get_lvl();
-							wet = playbackC * levelC;
+							wet = playbackC * C.get_lvl();
 							break;
 						case 5:
-							levelA = A.get_lvl();
-							levelC = C.get_lvl();
-							wet = (playbackA * (levelA/2)) + (playbackC * (levelC/2));
+							wet = (playbackA * (A.get_lvl()/2)) + (playbackC * (C.get_lvl()/2));
 							break;
 						case 6:
-							levelB = B.get_lvl();
-							levelC = C.get_lvl();
-							wet = (playbackB * (levelB/2)) + (playbackC * (levelC/2));
+							wet = (playbackB * (B.get_lvl()/2)) + (playbackC * (C.get_lvl()/2));
 							break;
 						case 7:
-							levelA = A.get_lvl();
-							levelB = B.get_lvl();
-							levelC = C.get_lvl();
-							wet = (playbackA * (levelA/3)) + (playbackB * (levelB/3)) + (playbackC *  (levelC/3));
+							wet = (playbackA * (A.get_lvl()/3)) + (playbackB * (B.get_lvl()/3)) + (playbackC *  (C.get_lvl()/3));
 							break;
 					}
 				}
