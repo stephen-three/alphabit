@@ -11,7 +11,6 @@
 
 using namespace daisy;
 using namespace daisy::seed;
-using namespace daisysp;
 
 const std::string ver = "alphabit_00b";
 const std::string notes = "Tested. Working as intended."
@@ -232,10 +231,10 @@ bool setFltrB = false;
 bool setFltrC = false;
 
 DaisySeed hw;
-CrossFade cf;
-Tone fltrA;
-Tone fltrB;
-Tone fltrC;
+daisysp::CrossFade cf;
+daisysp::Tone fltrA;
+daisysp::Tone fltrB;
+daisysp::Tone fltrC;
 
 // analog input pins
 enum AdcChannel
@@ -291,7 +290,7 @@ int main(void)
 	hw.SetAudioSampleRate(SaiHandle::Config::SampleRate::SAI_96KHZ);
 	float sample_rate = hw.AudioSampleRate();
 	cf.Init();
-	cf.SetCurve(CROSSFADE_CPOW);
+	cf.SetCurve(daisysp::CROSSFADE_CPOW);
 	fltrA.Init(sample_rate);
 	fltrB.Init(sample_rate);
 	fltrC.Init(sample_rate);
@@ -1145,11 +1144,11 @@ void Controls()
 
 void AudioCallback(AudioHandle::InputBuffer in, AudioHandle::OutputBuffer out, size_t size)
 {
+	Controls();
+
 	float playbackA = 0.f;
 	float playbackB = 0.f;
 	float playbackC = 0.f;
-	Controls();
-
 	for (size_t i = 0; i < size; i++)
 	{
 		A.NextSample(playbackA, in, i);
