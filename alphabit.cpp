@@ -399,7 +399,8 @@ void LoopChannel::latch_REC()
 
 void LoopChannel::ClearLoop()
 {
-	for (int i = 0; i < mod; i++) {
+	for (int i = 0; i < mod; i++)
+	{
 		p_loop[i] = 0.f;
 	}
 }
@@ -412,7 +413,8 @@ void LoopChannel::ResetBuffer()
 	play = false;
 	len = 0;
 	position = 0;
-	for (int i = 0; i < mod; i++) {
+	for (int i = 0; i < mod; i++)
+	{
 		p_loop[i] = 0.f;
 	}
 	mod = size;
