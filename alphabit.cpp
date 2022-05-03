@@ -1156,6 +1156,16 @@ void Controls()
 
 float MakePlayback(uint8_t playCondition, const float &playbackA, const float &playbackB, const float &playbackC)
 {
+	/* FIXME:
+		Level logic in switch (playCondition) statements is suboptimal
+		and should still be refined.
+		The main issue that when a loop has been recorded but its volume
+		is turned down, the other loops should be able to "fill the void".
+		As it stands now, each channel occupies a equal fraction to the
+		number of recorded channels. If 2 channels have been recorded, the
+		channels can, at most, occupy 1/2 of the total voluem. If 3 channels 
+		have been recorded, 1/3.
+	*/
 	float wet = 0.f;
 	switch (playCondition)
 	{
@@ -1232,12 +1242,11 @@ void AudioCallback(daisy::AudioHandle::InputBuffer in, daisy::AudioHandle::Outpu
 			bool recordedA = A.get_recdd();
 			bool recordedB = B.get_recdd();
 			bool recordedC = C.get_recdd();
-			bool playA = A.get_play();
 			bool playB = B.get_play();
 			bool playC = C.get_play();
 
 			uint8_t playCondition = 0;
-			if (recordedA && playA) playCondition += 1;
+			if (recordedA && A.get_play()) playCondition += 1;
 			if (mode == 1)
 			{
 				bool rec_ingB = B.get_rec();
@@ -1262,16 +1271,6 @@ void AudioCallback(daisy::AudioHandle::InputBuffer in, daisy::AudioHandle::Outpu
 				}
 				else wet = dry;
 			}
-			/* FIXME:
-				Level logic in switch (playCondition) statements is suboptimal
-				and should still be refined.
-				The main issue that when a loop has been recorded but its volume
-				is turned down, the other loops should be able to "fill the void".
-				As it stands now, each channel occupies a equal fraction to the
-				number of recorded channels. If 2 channels have been recorded, the
-				channels can, at most, occupy 1/2 of the total voluem. If 3 channels 
-				have been recorded, 1/3.
-			*/
 
 			cf.SetPos(mix);
 			float output = cf.Process(dry, wet);
