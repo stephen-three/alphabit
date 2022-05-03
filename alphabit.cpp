@@ -178,7 +178,7 @@ private:
 class Footswitch
 {
 private:
-	Switch fsw;
+	daisy::Switch fsw;
 	bool live;
 	bool last;
 	bool dcWait; // dc: Double Click
@@ -614,7 +614,7 @@ int Footswitch::Handle(uint16_t holdTime /* =600 */)
 		snglOK = true;
 		hold = false;
 
-		if ((System::GetNow() - rleasTime) < dcTimeOut && !dcWhenReleased && dcWait) dcWhenReleased = true;
+		if ((daisy::System::GetNow() - rleasTime) < dcTimeOut && !dcWhenReleased && dcWait) dcWhenReleased = true;
 		else dcWhenReleased = false;
 		dcWait = false;
 	}
@@ -623,7 +623,7 @@ int Footswitch::Handle(uint16_t holdTime /* =600 */)
 	{
 		if (!ignrRelease)
 		{
-			rleasTime = System::GetNow();
+			rleasTime = daisy::System::GetNow();
 			if (!dcWhenReleased) dcWait = true;
 			// double click
 			else
@@ -643,7 +643,7 @@ int Footswitch::Handle(uint16_t holdTime /* =600 */)
 	}
 
 	// single press
-	if (!live && (System::GetNow() - rleasTime) >= dcTimeOut && dcWait && !dcWhenReleased && snglOK && input != 2)
+	if (!live && (daisy::System::GetNow() - rleasTime) >= dcTimeOut && dcWait && !dcWhenReleased && snglOK && input != 2)
 	{
 		input = 1;
 		dcWait = false;
