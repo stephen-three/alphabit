@@ -1,5 +1,5 @@
 // alphabit.cpp
-// ver_00b
+// ver_00c
 //
 // Three Channel Looper
 // 
@@ -9,7 +9,7 @@
 #include "daisysp.h"
 #include <string>
 
-const std::string ver = "alphabit_00b";
+const std::string ver = "alphabit_00c";
 const std::string notes = "Tested. Working as intended."
 						  "New this Ver:"
 						  "---	Fixed fsw Handle() results."
@@ -78,7 +78,7 @@ public:
 		indexTracker(0),
 		rateRemainder(0.f),
 		pushVal(0)
-	{}
+	{	}
 
  // Getters
     inline bool get_rec()
@@ -245,22 +245,18 @@ daisy::GPIO rvrsC;
 float DSY_SDRAM_BSS loopA[MAX_SIZE];
 float DSY_SDRAM_BSS loopB[MAX_SIZE];
 float DSY_SDRAM_BSS loopC[MAX_SIZE];
-bool fswHOLD = false; // if fsw is single-pressed or held to REC
-bool byp = true;
-uint8_t mode = 3;
-/* Modes
-	3: Three independent loops
-	2: Three loops, with the two secondary loops stretched/compressed to match the duration of the primary
-	1: One loop, played on three independently controlled channels
-*/
-float mix = 1.f;
-float vol = 1.f;
-bool setFltrA = false;
-bool setFltrB = false;
-bool setFltrC = false;
 LoopChannel A(loopA, MAX_SIZE); // primary channel
 LoopChannel B(loopB, MAX_SIZE); // secondary
 LoopChannel C(loopC, MAX_SIZE); // secondary
+/* global LoopChannels
+	LoopChannels are global because
+	they need to zero'd, ClearLoop(), before entering the callback
+	to prevent a audio glitch for a few samples upon startup
+	and a callback with extra parameters cannot be called by hw.StartAudio()
+	The static variables in the callback are static for the second reason as well.
+*/
+bool fswHOLD = false; // if fsw is single-pressed or held to REC
+
 
 long remap(
 			const long &x, 
@@ -269,8 +265,6 @@ long remap(
 			const long &outMin, 
 			const long &outMax
 		  );
-
-void Controls();
 
 float MakePlayback(uint8_t playCondition, const float playbacks[3], LoopChannel* channels[3]);
 
@@ -679,476 +673,6 @@ long remap(const long &x, const long &inMin, const long &inMax, const long &outM
 	return (x - inMin) * (outMax - outMin) / (inMax - inMin) + outMin;
 }
 
-void Controls()
-{
-	static Footswitch fsw(daisy::seed::D26);
-	static Footswitch fswA(daisy::seed::D27);
-	static Footswitch fswB(daisy::seed::D29);
-	static Footswitch fswC(daisy::seed::D30);
-
-	uint16_t md = hw.adc.Get(modeSw) / 64; // value: 0-65536/64 = 0-1024
-	if (md < 124) mode = 1;
-	else if (md < 900) mode = 3;
-	else mode = 2;
-
-	mix = hw.adc.GetFloat(mixPot); // value: 0-1.0
-	vol = hw.adc.GetFloat(volPot);
-
-	bool direction;
-	direction = rvrsA.Read();
-	A.set_rvrs(direction);
-	direction = rvrsB.Read();
-	B.set_rvrs(direction);
-	direction = rvrsC.Read();
-	C.set_rvrs(direction);
-
-	uint16_t time = hw.adc.Get(timeApot) / 64;
-	uint16_t speed = 0;
-	if (time > 476 && time < 548) speed = 100;
-	else if (time <= 476) speed = remap(time, 0, 476, 400, 100);
-	else if (time >= 548) speed = remap(time, 548, 1024, 100, 25);
-	A.set_speed(speed);
-
-	time = hw.adc.Get(timeBpot) / 64;
-	if (time > 476 && time < 548) speed = 100;
-	else if (time <= 476) speed = remap(time, 0, 476, 400, 100);
-	else if (time >= 548) speed = remap(time, 548, 1024, 100, 25);
-	B.set_speed(speed);
-
-	time = hw.adc.Get(timeCpot) / 64;
-	if (time > 476 && time < 548) speed = 100;
-	else if (time <= 476) speed = remap(time, 0, 476, 400, 100);
-	else if (time >= 548) speed = remap(time, 548, 1024, 100, 25);
-	C.set_speed(speed);
-
-	// footswitches
-	uint8_t fswCommand;
-	fswCommand = fsw.Handle(1000);
-	static bool clearing = false;
-	static bool ghostKnobs = false;
-	static bool gk_takeBench = true;
-	static uint16_t freqA_benchMark = 0;
-	static uint16_t freqB_benchMark = 0;
-	static uint16_t freqC_benchMark = 0;
-	switch(fswCommand)
-	{
-		case 0:
-			break;
-		case 1:
-			// bypass
-			byp = !byp;
-			/* !final form
-			  Relay Bypass controlled by bypass() func
-			  that both toggles bool byp and flips the 
-			  NPN transistor connected to the relay.
-			*/
-			break;
-		case 2:
-			if(A.resetEnabled())
-			{
-				A.ResetBuffer();
-				clearing = true;
-				setFltrA = false;
-				if (mode == 1)
-				{
-					if (!B.get_recdd()) B.set_play(false);
-					if (!C.get_recdd()) C.set_play(false);
-				}
-			}
-
-			if(B.resetEnabled())
-			{
-				B.ResetBuffer();
-				clearing = true;
-				setFltrB = false;
-			}
-
-			if(C.resetEnabled())
-			{
-				C.ResetBuffer();
-				clearing = true;
-				setFltrC = false;
-			}
-			break;
-		case 3:
-			// ghost knobs
-			ghostKnobs = true;
-			if (gk_takeBench)
-			{
-				freqA_benchMark = hw.adc.Get(lvlApot) / 64;
-				freqB_benchMark = hw.adc.Get(lvlBpot) / 64;
-				freqC_benchMark = hw.adc.Get(lvlCpot) / 64;
-				gk_takeBench = false;
-			}
-			break;
-		case 4:
-			ghostKnobs = false;
-			gk_takeBench = true;
-			break;
-	}
-
-	if (fswHOLD)
-	{
-		fswCommand = fswA.Handle(90);
-		switch (fswCommand)
-		{
-			case 0:
-				break;
-			case 1:
-				A.toggle_play();
-				break;
-			case 2:
-				if (A.resetEnabled())
-				{
-					A.ResetBuffer();
-					clearing = true;
-					if (mode == 1)
-					{
-						if (!B.get_recdd()) B.set_play(false);
-						if (!C.get_recdd()) C.set_play(false);
-					}
-					setFltrA = false;
-				}
-				break;
-			case 3:
-				if (!A.get_rec())
-				{
-					A.start_REC();
-				}
-				break;
-			case 4:
-				if (A.get_rec())
-				{
-					A.stop_REC();
-				}
-				break;
-		}
-	
-		fswCommand = fswB.Handle(90);
-		switch (fswCommand)
-		{
-			case 0:
-				break;
-			case 1:
-				if (mode == 1)
-				{
-					B.set_play(!B.get_play());
-					// toggle_play() only toggles if recorded==true
-					// which is not necessary in Mode 1
-				}
-				else
-				{
-					B.toggle_play();
-				}
-				break;
-			case 2:
-				if (B.resetEnabled())
-				{
-					B.ResetBuffer();
-					clearing = true;
-					setFltrB = false;
-				}
-				break;
-			case 3:
-				if (!B.get_rec())
-				{
-					B.start_REC();
-				}
-				break;
-			case 4:
-				if (B.get_rec())
-				{
-					B.stop_REC();
-				}
-				break;
-		}
-	
-		fswCommand = fswC.Handle(90);
-		switch (fswCommand)
-		{
-			case 0:
-				break;
-			case 1:
-				if (mode == 1)
-				{
-					C.set_play(!C.get_play());
-				}
-				else 
-				{
-					C.toggle_play();
-				}
-				break;
-			case 2:
-				if (C.resetEnabled())
-				{
-					C.ResetBuffer();
-					clearing = true;
-					setFltrC = false;
-				}
-				break;
-			case 3:
-				if (!C.get_rec())
-				{
-					C.start_REC();
-				}
-				break;
-			case 4:
-				if (C.get_rec())
-				{
-					C.stop_REC();
-				}
-				break;
-		}
-	
-	}
-	else 
-	{
-		fswCommand = fswA.Handle();
-		switch(fswCommand)
-		{
-			case 0:
-				break;
-			case 1:
-				// toggle REC
-				if (A.get_rec())
-				{
-					A.stop_REC();
-				}
-				else
-				{
-					A.start_REC();
-				}
-				break;
-			case 2:
-				A.toggle_play();
-				break;
-			case 3:
-				// clear loop
-				if (A.resetEnabled())
-				{
-					A.ResetBuffer();
-					clearing = true;
-					if (mode == 1)
-					{
-						if (!B.get_recdd()) B.set_play(false);
-						if (!C.get_recdd()) C.set_play(false);
-					}
-					setFltrA = false;
-				}
-				break;
-		}
-	
-		fswCommand = fswB.Handle();
-		switch(fswCommand)
-		{
-			case 0:
-				break;
-			case 1:
-				// toggle REC
-				if (B.get_rec())
-				{
-					B.stop_REC();
-				}
-				else
-				{
-					B.start_REC();
-				}
-				break;
-			case 2:
-				if (mode == 1)
-				{
-					B.set_play(!B.get_play());
-				}
-				else
-				{
-					B.toggle_play();
-				}
-				break;
-			case 3:
-				// clear loop
-				if (B.resetEnabled())
-				{
-					B.ResetBuffer();
-					clearing = true;
-					setFltrB = false;
-				}
-				break;
-		}
-	
-		fswCommand = fswC.Handle();
-		switch(fswCommand)
-		{
-			case 0:
-				break;
-			case 1:
-				// toggle REC
-
-				if (C.get_rec())
-				{
-					C.stop_REC();
-				}
-				else
-				{
-					C.start_REC();
-				}
-				break;
-			case 2:
-				if (mode == 1)
-				{
-					C.set_play(!C.get_play());
-				}
-				else
-				{
-					C.toggle_play();
-				}
-				break;
-			case 3:
-				// clear loop
-				if (C.resetEnabled())
-				{
-					C.ResetBuffer();
-					clearing = true;
-					setFltrC = false;
-				}
-				break;
-		}
-	}
-
-	if (ghostKnobs)
-	{
-		uint16_t freqA = hw.adc.Get(lvlApot) / 64;
-		uint16_t freqB = hw.adc.Get(lvlBpot) / 64;
-		uint16_t freqC = hw.adc.Get(lvlCpot) / 64;
-
-		float freq;
-		// if (freqA != freqA_benchMark) with a small window for misreadings
-		if (freqA > freqA_benchMark + 2 || freqA < freqA_benchMark - 2)
-		{
-			if (freqA > FLTR_OFF) 
-			{
-				setFltrA = false;
-			}
-			else 
-			{
-				setFltrA = true;
-				// map freqA into frequency range values
-				freq = remap(freqA, FLTR_OFF, 0, FREQ_MAX, FREQ_MIN); 
-				fltrA.SetFreq(freq); 
-			}
-			freqA_benchMark = freqA;
-		}
-
-		if (freqB > freqB_benchMark + 2 || freqB < freqB_benchMark - 2)
-		{
-			if (freqB > FLTR_OFF) 
-			{
-				setFltrB = false;
-			}
-			else 
-			{
-				setFltrB = true;
-				freq = remap(freqB, FLTR_OFF, 0, FREQ_MAX, FREQ_MIN); 
-				fltrB.SetFreq(freq); 
-			}
-			freqB_benchMark = freqB;
-		}
-
-		if (freqC > freqC_benchMark + 2 || freqC < freqC_benchMark - 2)
-		{
-			if (freqC > FLTR_OFF) 
-			{
-				setFltrC = false;
-			}
-			else 
-			{
-				setFltrC = true;
-				freq = remap(freqC, FLTR_OFF, 0, FREQ_MAX, FREQ_MIN); 
-				fltrC.SetFreq(freq); 
-			}
-			freqC_benchMark = freqC;
-		}
-	}
-	else
-	{
-		A.set_lvl(hw.adc.GetFloat(lvlApot));
-		B.set_lvl(hw.adc.GetFloat(lvlBpot));
-		C.set_lvl(hw.adc.GetFloat(lvlCpot));
-	}
-
-	// LEDs
-	uint16_t blink = 4000;
-	bool lightA;
-	bool lightB;
-	bool lightC;
-	if (mode == 1)
-	{
-		lightA = A.get_play() && A.get_pos() < blink;
-		lightB = B.get_play() && B.get_pos() < blink;
-		lightC = C.get_play() && C.get_pos() < blink;
-	}
-	else
-	{
-		lightA = A.get_recdd() && A.get_play() && A.get_pos() < blink;
-		lightB = B.get_recdd() && B.get_play() && B.get_pos() < blink;
-		lightC = C.get_recdd() && C.get_play() && C.get_pos() < blink;
-	}
-	bool recNow = (A.get_rec() || B.get_rec() || C.get_rec());
-
-	if (recNow)
-	{
-		ledR.Write(true);
-		ledG.Write(false);
-		ledB.Write(false);
-	}
-	else
-	{
-		// chA represented by Magenta (red & blu)
-		// chB: Cyan (grn & blu)
-		// chC: Yellow (red & grn)
-		ledR.Write(lightA || lightC);
-		ledG.Write(lightB || lightC);
-		ledB.Write(lightB || lightA);
-	}
-	
-	if (clearing)
-	{
-		// "Clearing Loop" lighting cue
-		static uint8_t cueCount = 0;
-		static uint32_t prev = 0;
-		ledR.Write(false);
-		ledB.Write(false);
-		bypR.Write(false);
-		bypGB.Write(false);
-		if (cueCount % 2 != 0) ledG.Write(true);
-		else if (cueCount < 5) ledG.Write(false);
-		else
-		{
-			ledG.Write(false);
-			cueCount = 0;
-			clearing = false;
-		}
-
-		if ((daisy::System::GetNow() - prev) > 150)
-		{
-			prev = daisy::System::GetNow();
-			cueCount++;
-		}
-	}
-	else
-	{
-		if (byp)
-		{
-			bypR.Write(recNow && !ghostKnobs);
-			bypGB.Write(ghostKnobs);
-		}
-		else
-		{
-			bypR.Write(!ghostKnobs);
-			bypGB.Write(!recNow);
-		}
-	}
-}
-
 float MakePlayback(uint8_t playCondition, const float playbacks[3], LoopChannel* channels[3])
 {
 	/* FIXME:
@@ -1161,6 +685,7 @@ float MakePlayback(uint8_t playCondition, const float playbacks[3], LoopChannel*
 		channels can, at most, occupy 1/2 of the total voluem. If 3 channels 
 		have been recorded, 1/3.
 	*/
+	enum ch {a = 0, b, c};
 	float wet = 0.f;
 	switch (playCondition)
 	{
@@ -1168,25 +693,25 @@ float MakePlayback(uint8_t playCondition, const float playbacks[3], LoopChannel*
 			// loops recorded but no playbacks
 			break;
 		case 1:
-			wet = playbacks[0] * channels[0]->get_lvl();
+			wet = playbacks[a] * channels[a]->get_lvl();
 			break;
 		case 2:
-			wet = playbacks[1] * channels[1]->get_lvl();
+			wet = playbacks[b] * channels[b]->get_lvl();
 			break;
 		case 3:
-			wet = (playbacks[0] * (A.get_lvl()/2)) + (playbacks[1] * (channels[1]->get_lvl()/2));
+			wet = (playbacks[a] * (channels[a]->get_lvl()/2)) + (playbacks[b] * (channels[b]->get_lvl()/2));
 			break;
 		case 4:
-			wet = playbacks[2] * channels[2]->get_lvl();
+			wet = playbacks[c] * channels[c]->get_lvl();
 			break;
 		case 5:
-			wet = (playbacks[0] * (A.get_lvl()/2)) + (playbacks[2] * (channels[2]->get_lvl()/2));
+			wet = (playbacks[a] * (channels[a]->get_lvl()/2)) + (playbacks[c] * (channels[c]->get_lvl()/2));
 			break;
 		case 6:
-			wet = (playbacks[1] * (channels[1]->get_lvl()/2)) + (playbacks[2] * (channels[2]->get_lvl()/2));
+			wet = (playbacks[b] * (channels[b]->get_lvl()/2)) + (playbacks[c] * (channels[c]->get_lvl()/2));
 			break;
 		case 7:
-			wet = (playbacks[0] * (A.get_lvl()/3)) + (playbacks[1] * (channels[1]->get_lvl()/3)) + (playbacks[2] *  (channels[2]->get_lvl()/3));
+			wet = (playbacks[a] * (channels[a]->get_lvl()/3)) + (playbacks[b] * (channels[b]->get_lvl()/3)) + (playbacks[c] *  (channels[c]->get_lvl()/3));
 			break;
 	}
 
@@ -1195,7 +720,487 @@ float MakePlayback(uint8_t playCondition, const float playbacks[3], LoopChannel*
 
 void AudioCallback(daisy::AudioHandle::InputBuffer in, daisy::AudioHandle::OutputBuffer out, size_t size)
 {
-	Controls();
+	static bool setFltrA = false;
+	static bool setFltrB = false;
+	static bool setFltrC = false;
+	static bool byp = true;
+	static float mix = 1.f;
+	static float vol = 1.f;
+	static uint8_t mode = 3;
+	/* Modes
+		3: Three independent loops
+		2: Three loops, with the two secondary loops stretched/compressed to match the duration of the primary
+		1: One loop, played on three independently controlled channels
+	*/
+	// Controls
+	{
+		static Footswitch fsw(daisy::seed::D26);
+		static Footswitch fswA(daisy::seed::D27);
+		static Footswitch fswB(daisy::seed::D29);
+		static Footswitch fswC(daisy::seed::D30);
+
+		uint16_t md = hw.adc.Get(modeSw) / 64; // value: 0-65536/64 = 0-1024
+		if (md < 124) mode = 1;
+		else if (md < 900) mode = 3;
+		else mode = 2;
+
+		mix = hw.adc.GetFloat(mixPot); // value: 0-1.0
+		vol = hw.adc.GetFloat(volPot);
+
+		bool direction;
+		direction = rvrsA.Read();
+		A.set_rvrs(direction);
+		direction = rvrsB.Read();
+		B.set_rvrs(direction);
+		direction = rvrsC.Read();
+		C.set_rvrs(direction);
+
+		uint16_t time = hw.adc.Get(timeApot) / 64;
+		uint16_t speed = 0;
+		if (time > 476 && time < 548) speed = 100;
+		else if (time <= 476) speed = remap(time, 0, 476, 400, 100);
+		else if (time >= 548) speed = remap(time, 548, 1024, 100, 25);
+		A.set_speed(speed);
+
+		time = hw.adc.Get(timeBpot) / 64;
+		if (time > 476 && time < 548) speed = 100;
+		else if (time <= 476) speed = remap(time, 0, 476, 400, 100);
+		else if (time >= 548) speed = remap(time, 548, 1024, 100, 25);
+		B.set_speed(speed);
+
+		time = hw.adc.Get(timeCpot) / 64;
+		if (time > 476 && time < 548) speed = 100;
+		else if (time <= 476) speed = remap(time, 0, 476, 400, 100);
+		else if (time >= 548) speed = remap(time, 548, 1024, 100, 25);
+		C.set_speed(speed);
+
+		// footswitches
+		uint8_t fswCommand;
+		fswCommand = fsw.Handle(1000);
+		static bool clearing = false;
+		static bool ghostKnobs = false;
+		static bool gk_takeBench = true;
+		static uint16_t freqA_benchMark = 0;
+		static uint16_t freqB_benchMark = 0;
+		static uint16_t freqC_benchMark = 0;
+		switch(fswCommand)
+		{
+			case 0:
+				break;
+			case 1:
+				// bypass
+				byp = !byp;
+				/* !final form
+				Relay Bypass controlled by bypass() func
+				that both toggles bool byp and flips the 
+				NPN transistor connected to the relay.
+				*/
+				break;
+			case 2:
+				if(A.resetEnabled())
+				{
+					A.ResetBuffer();
+					clearing = true;
+					setFltrA = false;
+					if (mode == 1)
+					{
+						if (!B.get_recdd()) B.set_play(false);
+						if (!C.get_recdd()) C.set_play(false);
+					}
+				}
+
+				if(B.resetEnabled())
+				{
+					B.ResetBuffer();
+					clearing = true;
+					setFltrB = false;
+				}
+
+				if(C.resetEnabled())
+				{
+					C.ResetBuffer();
+					clearing = true;
+					setFltrC = false;
+				}
+				break;
+			case 3:
+				// ghost knobs
+				ghostKnobs = true;
+				if (gk_takeBench)
+				{
+					freqA_benchMark = hw.adc.Get(lvlApot) / 64;
+					freqB_benchMark = hw.adc.Get(lvlBpot) / 64;
+					freqC_benchMark = hw.adc.Get(lvlCpot) / 64;
+					gk_takeBench = false;
+				}
+				break;
+			case 4:
+				ghostKnobs = false;
+				gk_takeBench = true;
+				break;
+		}
+
+		if (fswHOLD)
+		{
+			fswCommand = fswA.Handle(90);
+			switch (fswCommand)
+			{
+				case 0:
+					break;
+				case 1:
+					A.toggle_play();
+					break;
+				case 2:
+					if (A.resetEnabled())
+					{
+						A.ResetBuffer();
+						clearing = true;
+						if (mode == 1)
+						{
+							if (!B.get_recdd()) B.set_play(false);
+							if (!C.get_recdd()) C.set_play(false);
+						}
+						setFltrA = false;
+					}
+					break;
+				case 3:
+					if (!A.get_rec())
+					{
+						A.start_REC();
+					}
+					break;
+				case 4:
+					if (A.get_rec())
+					{
+						A.stop_REC();
+					}
+					break;
+			}
+		
+			fswCommand = fswB.Handle(90);
+			switch (fswCommand)
+			{
+				case 0:
+					break;
+				case 1:
+					if (mode == 1)
+					{
+						B.set_play(!B.get_play());
+						// toggle_play() only toggles if recorded==true
+						// which is not necessary in Mode 1
+					}
+					else
+					{
+						B.toggle_play();
+					}
+					break;
+				case 2:
+					if (B.resetEnabled())
+					{
+						B.ResetBuffer();
+						clearing = true;
+						setFltrB = false;
+					}
+					break;
+				case 3:
+					if (!B.get_rec())
+					{
+						B.start_REC();
+					}
+					break;
+				case 4:
+					if (B.get_rec())
+					{
+						B.stop_REC();
+					}
+					break;
+			}
+		
+			fswCommand = fswC.Handle(90);
+			switch (fswCommand)
+			{
+				case 0:
+					break;
+				case 1:
+					if (mode == 1)
+					{
+						C.set_play(!C.get_play());
+					}
+					else 
+					{
+						C.toggle_play();
+					}
+					break;
+				case 2:
+					if (C.resetEnabled())
+					{
+						C.ResetBuffer();
+						clearing = true;
+						setFltrC = false;
+					}
+					break;
+				case 3:
+					if (!C.get_rec())
+					{
+						C.start_REC();
+					}
+					break;
+				case 4:
+					if (C.get_rec())
+					{
+						C.stop_REC();
+					}
+					break;
+			}
+		
+		}
+		else 
+		{
+			fswCommand = fswA.Handle();
+			switch(fswCommand)
+			{
+				case 0:
+					break;
+				case 1:
+					// toggle REC
+					if (A.get_rec())
+					{
+						A.stop_REC();
+					}
+					else
+					{
+						A.start_REC();
+					}
+					break;
+				case 2:
+					A.toggle_play();
+					break;
+				case 3:
+					// clear loop
+					if (A.resetEnabled())
+					{
+						A.ResetBuffer();
+						clearing = true;
+						if (mode == 1)
+						{
+							if (!B.get_recdd()) B.set_play(false);
+							if (!C.get_recdd()) C.set_play(false);
+						}
+						setFltrA = false;
+					}
+					break;
+			}
+		
+			fswCommand = fswB.Handle();
+			switch(fswCommand)
+			{
+				case 0:
+					break;
+				case 1:
+					// toggle REC
+					if (B.get_rec())
+					{
+						B.stop_REC();
+					}
+					else
+					{
+						B.start_REC();
+					}
+					break;
+				case 2:
+					if (mode == 1)
+					{
+						B.set_play(!B.get_play());
+					}
+					else
+					{
+						B.toggle_play();
+					}
+					break;
+				case 3:
+					// clear loop
+					if (B.resetEnabled())
+					{
+						B.ResetBuffer();
+						clearing = true;
+						setFltrB = false;
+					}
+					break;
+			}
+		
+			fswCommand = fswC.Handle();
+			switch(fswCommand)
+			{
+				case 0:
+					break;
+				case 1:
+					// toggle REC
+
+					if (C.get_rec())
+					{
+						C.stop_REC();
+					}
+					else
+					{
+						C.start_REC();
+					}
+					break;
+				case 2:
+					if (mode == 1)
+					{
+						C.set_play(!C.get_play());
+					}
+					else
+					{
+						C.toggle_play();
+					}
+					break;
+				case 3:
+					// clear loop
+					if (C.resetEnabled())
+					{
+						C.ResetBuffer();
+						clearing = true;
+						setFltrC = false;
+					}
+					break;
+			}
+		}
+
+		if (ghostKnobs)
+		{
+			uint16_t freqA = hw.adc.Get(lvlApot) / 64;
+			uint16_t freqB = hw.adc.Get(lvlBpot) / 64;
+			uint16_t freqC = hw.adc.Get(lvlCpot) / 64;
+
+			float freq;
+			// if (freqA != freqA_benchMark) with a small window for misreadings
+			if (freqA > freqA_benchMark + 2 || freqA < freqA_benchMark - 2)
+			{
+				if (freqA > FLTR_OFF) 
+				{
+					setFltrA = false;
+				}
+				else 
+				{
+					setFltrA = true;
+					// map freqA into frequency range values
+					freq = remap(freqA, FLTR_OFF, 0, FREQ_MAX, FREQ_MIN); 
+					fltrA.SetFreq(freq); 
+				}
+				freqA_benchMark = freqA;
+			}
+
+			if (freqB > freqB_benchMark + 2 || freqB < freqB_benchMark - 2)
+			{
+				if (freqB > FLTR_OFF) 
+				{
+					setFltrB = false;
+				}
+				else 
+				{
+					setFltrB = true;
+					freq = remap(freqB, FLTR_OFF, 0, FREQ_MAX, FREQ_MIN); 
+					fltrB.SetFreq(freq); 
+				}
+				freqB_benchMark = freqB;
+			}
+
+			if (freqC > freqC_benchMark + 2 || freqC < freqC_benchMark - 2)
+			{
+				if (freqC > FLTR_OFF) 
+				{
+					setFltrC = false;
+				}
+				else 
+				{
+					setFltrC = true;
+					freq = remap(freqC, FLTR_OFF, 0, FREQ_MAX, FREQ_MIN); 
+					fltrC.SetFreq(freq); 
+				}
+				freqC_benchMark = freqC;
+			}
+		}
+		else
+		{
+			A.set_lvl(hw.adc.GetFloat(lvlApot));
+			B.set_lvl(hw.adc.GetFloat(lvlBpot));
+			C.set_lvl(hw.adc.GetFloat(lvlCpot));
+		}
+
+		// LEDs
+		uint16_t blink = 4000;
+		bool lightA;
+		bool lightB;
+		bool lightC;
+		if (mode == 1)
+		{
+			lightA = A.get_play() && A.get_pos() < blink;
+			lightB = B.get_play() && B.get_pos() < blink;
+			lightC = C.get_play() && C.get_pos() < blink;
+		}
+		else
+		{
+			lightA = A.get_recdd() && A.get_play() && A.get_pos() < blink;
+			lightB = B.get_recdd() && B.get_play() && B.get_pos() < blink;
+			lightC = C.get_recdd() && C.get_play() && C.get_pos() < blink;
+		}
+		bool recNow = (A.get_rec() || B.get_rec() || C.get_rec());
+
+		if (recNow)
+		{
+			ledR.Write(true);
+			ledG.Write(false);
+			ledB.Write(false);
+		}
+		else
+		{
+			// chA represented by Magenta (red & blu)
+			// chB: Cyan (grn & blu)
+			// chC: Yellow (red & grn)
+			ledR.Write(lightA || lightC);
+			ledG.Write(lightB || lightC);
+			ledB.Write(lightB || lightA);
+		}
+		
+		if (clearing)
+		{
+			// "Clearing Loop" lighting cue
+			static uint8_t cueCount = 0;
+			static uint32_t prev = 0;
+			ledR.Write(false);
+			ledB.Write(false);
+			bypR.Write(false);
+			bypGB.Write(false);
+			if (cueCount % 2 != 0) ledG.Write(true);
+			else if (cueCount < 5) ledG.Write(false);
+			else
+			{
+				ledG.Write(false);
+				cueCount = 0;
+				clearing = false;
+			}
+
+			if ((daisy::System::GetNow() - prev) > 150)
+			{
+				prev = daisy::System::GetNow();
+				cueCount++;
+			}
+		}
+		else
+		{
+			if (byp)
+			{
+				bypR.Write(recNow && !ghostKnobs);
+				bypGB.Write(ghostKnobs);
+			}
+			else
+			{
+				bypR.Write(!ghostKnobs);
+				bypGB.Write(!recNow);
+			}
+		}
+	}
 
 	float playbackA = 0.f;
 	float playbackB = 0.f;
