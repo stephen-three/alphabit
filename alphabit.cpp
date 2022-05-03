@@ -176,7 +176,7 @@ private:
 class Footswitch
 {
 private:
-	daisy::Switch fsw;
+	daisy::Switch fswitch;
 	bool live;
 	bool last;
 	bool dcWait; // dc: Double Click
@@ -190,7 +190,7 @@ private:
 
 public:
 
-	Footswitch(daisy::Pin pin)
+	Footswitch(daisy::Pin pin_assignment)
 			:	live(false),
 				last(false),
 				dcWait(false),
@@ -202,7 +202,7 @@ public:
 				hold(false)
 	{
 		using namespace daisy;
-		fsw.Init(pin, 0.f, Switch::TYPE_MOMENTARY, Switch::POLARITY_INVERTED, Switch::PULL_UP);
+		fswitch.Init(pin_assignment, 0.f, Switch::TYPE_MOMENTARY, Switch::POLARITY_INVERTED, Switch::PULL_UP);
 	}
 
 	int Handle(uint16_t holdTime = 600);
@@ -606,8 +606,8 @@ int Footswitch::Handle(uint16_t holdTime /* =600 */)
 {
 	uint8_t input = 0;
 
-	fsw.Debounce();
-	live = fsw.Pressed();
+	fswitch.Debounce();
+	live = fswitch.Pressed();
 
 	// pressed
 	if (live && !last)
@@ -652,7 +652,7 @@ int Footswitch::Handle(uint16_t holdTime /* =600 */)
 		dcWait = false;
 	}
 	// hold
-	if (live && fsw.TimeHeldMs() > holdTime)
+	if (live && fswitch.TimeHeldMs() > holdTime)
 	{
 		if (!hold)
 		{
