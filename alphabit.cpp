@@ -272,12 +272,7 @@ long remap(
 
 void Controls();
 
-float MakePlayback(
-					uint8_t playCondition, 
-					const float &playbackA, 
-					const float &playbackB, 
-					const float &playbackC
-				  );
+float MakePlayback(uint8_t playCondition, const float playbacks[3]);
 
 void AudioCallback(daisy::AudioHandle::InputBuffer in, daisy::AudioHandle::OutputBuffer out, size_t size);
 
@@ -1154,7 +1149,7 @@ void Controls()
 	}
 }
 
-float MakePlayback(uint8_t playCondition, const float &playbackA, const float &playbackB, const float &playbackC)
+float MakePlayback(uint8_t playCondition, const float playbacks[3])
 {
 	/* FIXME:
 		Level logic in switch (playCondition) statements is suboptimal
@@ -1173,25 +1168,25 @@ float MakePlayback(uint8_t playCondition, const float &playbackA, const float &p
 			// loops recorded but no playbacks
 			break;
 		case 1:
-			wet = playbackA * A.get_lvl();
+			wet = playbacks[0] * A.get_lvl();
 			break;
 		case 2:
-			wet = playbackB * B.get_lvl();
+			wet = playbacks[1] * B.get_lvl();
 			break;
 		case 3:
-			wet = (playbackA * (A.get_lvl()/2)) + (playbackB * (B.get_lvl()/2));
+			wet = (playbacks[0] * (A.get_lvl()/2)) + (playbacks[1] * (B.get_lvl()/2));
 			break;
 		case 4:
-			wet = playbackC * C.get_lvl();
+			wet = playbacks[2] * C.get_lvl();
 			break;
 		case 5:
-			wet = (playbackA * (A.get_lvl()/2)) + (playbackC * (C.get_lvl()/2));
+			wet = (playbacks[0] * (A.get_lvl()/2)) + (playbacks[2] * (C.get_lvl()/2));
 			break;
 		case 6:
-			wet = (playbackB * (B.get_lvl()/2)) + (playbackC * (C.get_lvl()/2));
+			wet = (playbacks[1] * (B.get_lvl()/2)) + (playbacks[2] * (C.get_lvl()/2));
 			break;
 		case 7:
-			wet = (playbackA * (A.get_lvl()/3)) + (playbackB * (B.get_lvl()/3)) + (playbackC *  (C.get_lvl()/3));
+			wet = (playbacks[0] * (A.get_lvl()/3)) + (playbacks[1] * (B.get_lvl()/3)) + (playbacks[2] *  (C.get_lvl()/3));
 			break;
 	}
 
@@ -1245,6 +1240,8 @@ void AudioCallback(daisy::AudioHandle::InputBuffer in, daisy::AudioHandle::Outpu
 			bool playB = B.get_play();
 			bool playC = C.get_play();
 
+			float playbacks[3] = {playbackA, playbackB, playbackC};
+
 			uint8_t playCondition = 0;
 			if (recordedA && A.get_play()) playCondition += 1;
 			if (mode == 1)
@@ -1256,7 +1253,7 @@ void AudioCallback(daisy::AudioHandle::InputBuffer in, daisy::AudioHandle::Outpu
 
 				if (recordedA || rec_ingB || rec_ingC)
 				{
-					wet = MakePlayback(playCondition, playbackA, playbackB, playbackC);
+					wet = MakePlayback(playCondition, playbacks);
 				}
 				else wet = dry;
 			}
@@ -1267,7 +1264,7 @@ void AudioCallback(daisy::AudioHandle::InputBuffer in, daisy::AudioHandle::Outpu
 
 				if (recordedA || recordedB || recordedC)
 				{
-					wet = MakePlayback(playCondition, playbackA, playbackB, playbackC);
+					wet = MakePlayback(playCondition, playbacks);
 				}
 				else wet = dry;
 			}
