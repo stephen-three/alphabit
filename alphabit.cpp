@@ -9,8 +9,6 @@
 #include "daisysp.h"
 #include <string>
 
-using namespace daisy;
-
 const std::string ver = "alphabit_00b";
 const std::string notes = "Tested. Working as intended."
 						  "New this Ver:"
@@ -203,6 +201,7 @@ public:
 				waitForRelease(false),
 				hold(false)
 	{
+		using namespace daisy;
 		fsw.Init(pin, 0.f, Switch::TYPE_MOMENTARY, Switch::POLARITY_INVERTED, Switch::PULL_UP);
 	}
 
@@ -210,31 +209,11 @@ public:
 };
 
 
-float DSY_SDRAM_BSS loopA[MAX_SIZE];
-float DSY_SDRAM_BSS loopB[MAX_SIZE];
-float DSY_SDRAM_BSS loopC[MAX_SIZE];
-
-bool byp = true;
-uint8_t mode = 3;
-/* Modes
-	3: Three independent loops
-	2: Three loops, with the two secondary loops stretched/compressed to match the duration of the primary
-	1: One loop, played on three independently controlled channels
-*/
-float mix = 1.f;
-float vol = 1.f;
-bool fswHOLD = false; // if fsw is single-pressed or held to REC
-
-bool setFltrA = false;
-bool setFltrB = false;
-bool setFltrC = false;
-
-DaisySeed hw;
+daisy::DaisySeed hw;
 daisysp::CrossFade cf;
 daisysp::Tone fltrA;
 daisysp::Tone fltrB;
 daisysp::Tone fltrC;
-
 // analog input pins
 enum AdcChannel
 {
@@ -251,19 +230,34 @@ enum AdcChannel
 	volPot,
 	NUM_ADC_CHANNELS
 };
-AdcChannelConfig adc_config[NUM_ADC_CHANNELS];
+daisy::AdcChannelConfig adc_config[NUM_ADC_CHANNELS];
 // output pins, LEDs
-GPIO bypR;
-GPIO bypGB;
-GPIO ledR;
-GPIO ledG;
-GPIO ledB;
+daisy::GPIO bypR;
+daisy::GPIO bypGB;
+daisy::GPIO ledR;
+daisy::GPIO ledG;
+daisy::GPIO ledB;
 // digital input pin, ON-ON switches
-GPIO fwsBehavior;
-GPIO rvrsA;
-GPIO rvrsB;
-GPIO rvrsC;
-
+daisy::GPIO fwsBehavior;
+daisy::GPIO rvrsA;
+daisy::GPIO rvrsB;
+daisy::GPIO rvrsC;
+float DSY_SDRAM_BSS loopA[MAX_SIZE];
+float DSY_SDRAM_BSS loopB[MAX_SIZE];
+float DSY_SDRAM_BSS loopC[MAX_SIZE];
+bool fswHOLD = false; // if fsw is single-pressed or held to REC
+bool byp = true;
+uint8_t mode = 3;
+/* Modes
+	3: Three independent loops
+	2: Three loops, with the two secondary loops stretched/compressed to match the duration of the primary
+	1: One loop, played on three independently controlled channels
+*/
+float mix = 1.f;
+float vol = 1.f;
+bool setFltrA = false;
+bool setFltrB = false;
+bool setFltrC = false;
 LoopChannel A(loopA, MAX_SIZE); // primary channel
 LoopChannel B(loopB, MAX_SIZE); // secondary
 LoopChannel C(loopC, MAX_SIZE); // secondary
@@ -278,7 +272,7 @@ long remap(
 
 void Controls();
 
-void AudioCallback(AudioHandle::InputBuffer in, AudioHandle::OutputBuffer out, size_t size);
+void AudioCallback(daisy::AudioHandle::InputBuffer in, daisy::AudioHandle::OutputBuffer out, size_t size);
 
 
 
@@ -286,42 +280,51 @@ int main(void)
 {
 	hw.Init();
 	hw.SetAudioBlockSize(4); // number of samples handled per callback
-	hw.SetAudioSampleRate(SaiHandle::Config::SampleRate::SAI_96KHZ);
+	hw.SetAudioSampleRate(daisy::SaiHandle::Config::SampleRate::SAI_96KHZ);
 	float sample_rate = hw.AudioSampleRate();
 	cf.Init();
 	cf.SetCurve(daisysp::CROSSFADE_CPOW);
 	fltrA.Init(sample_rate);
 	fltrB.Init(sample_rate);
 	fltrC.Init(sample_rate);
-
-	using namespace daisy::seed;
-	adc_config[modeSw].InitSingle(A0);
-	adc_config[timeApot].InitSingle(A1);
-	adc_config[timeBpot].InitSingle(A2);
-	adc_config[timeCpot].InitSingle(A3);
-	adc_config[lvlApot].InitSingle(A4);
-	adc_config[lvlBpot].InitSingle(A5);
-	adc_config[lvlCpot].InitSingle(A6);
-	adc_config[mixPot].InitSingle(A7);
-	adc_config[volPot].InitSingle(A8);
-	bypR.Init(D8, GPIO::Mode::OUTPUT);
-	bypGB.Init(D9, GPIO::Mode::OUTPUT);
-	ledR.Init(D10, GPIO::Mode::OUTPUT);
-	ledG.Init(D11, GPIO::Mode::OUTPUT);
-	ledB.Init(D12, GPIO::Mode::OUTPUT);
-	fwsBehavior.Init(D7, GPIO::Mode::INPUT, GPIO::Pull::PULLDOWN);
-	rvrsA.Init(D24, GPIO::Mode::INPUT, GPIO::Pull::PULLDOWN);
-	rvrsB.Init(D25, GPIO::Mode::INPUT, GPIO::Pull::PULLDOWN);
-	rvrsC.Init(D28, GPIO::Mode::INPUT, GPIO::Pull::PULLDOWN);
+	// switch/potentiometer initializers
+	{
+		// analog pins
+		using namespace daisy::seed;
+		adc_config[modeSw].InitSingle(A0);
+		adc_config[timeApot].InitSingle(A1);
+		adc_config[timeBpot].InitSingle(A2);
+		adc_config[timeCpot].InitSingle(A3);
+		adc_config[lvlApot].InitSingle(A4);
+		adc_config[lvlBpot].InitSingle(A5);
+		adc_config[lvlCpot].InitSingle(A6);
+		adc_config[mixPot].InitSingle(A7);
+		adc_config[volPot].InitSingle(A8);
+		{
+			// digital pins
+			using namespace daisy;
+			bypR.Init(D8, GPIO::Mode::OUTPUT);
+			bypGB.Init(D9, GPIO::Mode::OUTPUT);
+			ledR.Init(D10, GPIO::Mode::OUTPUT);
+			ledG.Init(D11, GPIO::Mode::OUTPUT);
+			ledB.Init(D12, GPIO::Mode::OUTPUT);
+			fwsBehavior.Init(D7, GPIO::Mode::INPUT, GPIO::Pull::PULLDOWN);
+			rvrsA.Init(D24, GPIO::Mode::INPUT, GPIO::Pull::PULLDOWN);
+			rvrsB.Init(D25, GPIO::Mode::INPUT, GPIO::Pull::PULLDOWN);
+			rvrsC.Init(D28, GPIO::Mode::INPUT, GPIO::Pull::PULLDOWN);
+		}
+	}
 	hw.adc.Init(adc_config, NUM_ADC_CHANNELS);
 	hw.adc.Start();
-	// startup animation
+
 	bypR.Write(false);
 	bypGB.Write(false);
 	ledR.Write(false);
 	ledG.Write(false);
 	ledB.Write(false);
+	// startup animation
 	{
+		using namespace daisy;
 		ledR.Write(true);
 		ledB.Write(true);
 		uint32_t time = System::GetNow();
@@ -1121,9 +1124,9 @@ void Controls()
 			clearing = false;
 		}
 
-		if ((System::GetNow() - prev) > 150)
+		if ((daisy::System::GetNow() - prev) > 150)
 		{
-			prev = System::GetNow();
+			prev = daisy::System::GetNow();
 			cueCount++;
 		}
 	}
@@ -1142,7 +1145,7 @@ void Controls()
 	}
 }
 
-void AudioCallback(AudioHandle::InputBuffer in, AudioHandle::OutputBuffer out, size_t size)
+void AudioCallback(daisy::AudioHandle::InputBuffer in, daisy::AudioHandle::OutputBuffer out, size_t size)
 {
 	Controls();
 
