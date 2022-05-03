@@ -272,6 +272,13 @@ long remap(
 
 void Controls();
 
+float MakePlayback(
+					uint8_t playCondition, 
+					const float &playbackA, 
+					const float &playbackB, 
+					const float &playbackC
+				  );
+
 void AudioCallback(daisy::AudioHandle::InputBuffer in, daisy::AudioHandle::OutputBuffer out, size_t size);
 
 
@@ -1147,6 +1154,40 @@ void Controls()
 	}
 }
 
+float MakePlayback(uint8_t playCondition, const float &playbackA, const float &playbackB, const float &playbackC)
+{
+	float wet = 0.f;
+	switch (playCondition)
+	{
+		case 0:
+			// loops recorded but no playbacks
+			break;
+		case 1:
+			wet = playbackA * A.get_lvl();
+			break;
+		case 2:
+			wet = playbackB * B.get_lvl();
+			break;
+		case 3:
+			wet = (playbackA * (A.get_lvl()/2)) + (playbackB * (B.get_lvl()/2));
+			break;
+		case 4:
+			wet = playbackC * C.get_lvl();
+			break;
+		case 5:
+			wet = (playbackA * (A.get_lvl()/2)) + (playbackC * (C.get_lvl()/2));
+			break;
+		case 6:
+			wet = (playbackB * (B.get_lvl()/2)) + (playbackC * (C.get_lvl()/2));
+			break;
+		case 7:
+			wet = (playbackA * (A.get_lvl()/3)) + (playbackB * (B.get_lvl()/3)) + (playbackC *  (C.get_lvl()/3));
+			break;
+	}
+
+	return wet;
+}
+
 void AudioCallback(daisy::AudioHandle::InputBuffer in, daisy::AudioHandle::OutputBuffer out, size_t size)
 {
 	Controls();
@@ -1206,33 +1247,7 @@ void AudioCallback(daisy::AudioHandle::InputBuffer in, daisy::AudioHandle::Outpu
 
 				if (recordedA || rec_ingB || rec_ingC)
 				{
-					switch (playCondition)
-					{
-						case 0:
-							// loops recorded but no playbacks
-							break;
-						case 1:
-							wet = playbackA * A.get_lvl();
-							break;
-						case 2:
-							wet = playbackB * B.get_lvl();
-							break;
-						case 3:
-							wet = (playbackA * (A.get_lvl()/2)) + (playbackB * (B.get_lvl()/2));
-							break;
-						case 4:
-							wet = playbackC * C.get_lvl();
-							break;
-						case 5:
-							wet = (playbackA * (A.get_lvl()/2)) + (playbackC * (C.get_lvl()/2));
-							break;
-						case 6:
-							wet = (playbackB * (B.get_lvl()/2)) + (playbackC * (C.get_lvl()/2));
-							break;
-						case 7:
-							wet = (playbackA * (A.get_lvl()/3)) + (playbackB * (B.get_lvl()/3)) + (playbackC *  (C.get_lvl()/3));
-							break;
-					}
+					wet = MakePlayback(playCondition, playbackA, playbackB, playbackC);
 				}
 				else wet = dry;
 			}
@@ -1243,33 +1258,7 @@ void AudioCallback(daisy::AudioHandle::InputBuffer in, daisy::AudioHandle::Outpu
 
 				if (recordedA || recordedB || recordedC)
 				{
-					switch (playCondition)
-					{
-						case 0:
-							// loops recorded but no playbacks
-							break;
-						case 1:
-							wet = playbackA * A.get_lvl();
-							break;
-						case 2:
-							wet = playbackB * B.get_lvl();
-							break;
-						case 3:
-							wet = (playbackA * (A.get_lvl()/2)) + (playbackB * (B.get_lvl()/2));
-							break;
-						case 4:
-							wet = playbackC * C.get_lvl();
-							break;
-						case 5:
-							wet = (playbackA * (A.get_lvl()/2)) + (playbackC * (C.get_lvl()/2));
-							break;
-						case 6:
-							wet = (playbackB * (B.get_lvl()/2)) + (playbackC * (C.get_lvl()/2));
-							break;
-						case 7:
-							wet = (playbackA * (A.get_lvl()/3)) + (playbackB * (B.get_lvl()/3)) + (playbackC *  (C.get_lvl()/3));
-							break;
-					}
+					wet = MakePlayback(playCondition, playbackA, playbackB, playbackC);
 				}
 				else wet = dry;
 			}
