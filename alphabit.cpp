@@ -236,7 +236,19 @@ LoopChannel C(loopC, MAX_SIZE); // secondary
 	and a callback with extra parameters cannot be called by hw.StartAudio()
 	The static variables in the callback are static for the second reason as well.
 */
-bool fswHOLD = false; // if fsw is single-pressed or held to REC
+bool fswHOLD = false;
+/* fswHOLD
+	Upon startup, determines the behavior
+	of the loop channels' footswitches.
+	if true:
+		Hold down to record
+		Press 1x to toggle playback
+		Press 2x to clear loop
+	if false:
+		Press 1x to start(then again to stop) recording
+		Press 2x to toggle playback
+		Hold to clear loop
+*/
 
 
 long remap(
@@ -358,7 +370,6 @@ void LoopChannel::start_REC()
 void LoopChannel::stop_REC()
 {
 	if (firstPass && rec)
-	// firstPass && recorded?
 	{
 		firstPass = false;
 		mod = len;
@@ -1076,7 +1087,6 @@ void AudioCallback(daisy::AudioHandle::InputBuffer in, daisy::AudioHandle::Outpu
 					break;
 				case 1:
 					// toggle REC
-
 					if (C.get_rec())
 					{
 						C.stop_REC();
