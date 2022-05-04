@@ -1,5 +1,5 @@
 // alphabit.cpp
-// ver_00d
+// ver_00e
 //
 // Three Channel Looper
 // 
@@ -9,7 +9,7 @@
 #include "daisysp.h"
 #include <string>
 
-const std::string ver = "alphabit_00d";
+const std::string ver = "alphabit_00e";
 const std::string notes = "Tested. Working as intended.";
 
 /*	TODO:
