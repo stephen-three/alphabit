@@ -1,5 +1,5 @@
 // alphabit.cpp
-// ver_00c
+// ver_00d
 //
 // Three Channel Looper
 // 
@@ -9,25 +9,10 @@
 #include "daisysp.h"
 #include <string>
 
-const std::string ver = "alphabit_00c";
-const std::string notes = "Tested. Working as intended."
-						  "New this Ver:"
-						  "---	Fixed fsw Handle() results."
-						  "---	Fully fixed ghost knob functionalities."
-						  "---	Refactored based on the fsw Handle() toggling loop.play"
-						  "		instead of controlling it with the ON-OFF-ON swithes."
-						  "---	Eliminated need for loop.GetReference() and deleted it."
-						  "---	Eliminated need for LoopChannel member pass & deleted it."
-						  "		Now using bool firstPass."
-						  "---	Limited basic types to only necessary sizes."
-						  "--- Eliminated Audible squeak when clearing buffer when !fswHOLD";
+const std::string ver = "alphabit_00d";
+const std::string notes = "Tested. Working as intended.";
 
 /*	TODO:
-	FIXME in AudioCallback() { if (byp) else ... }
-	Improve level logic-
-		The current math does not account for if one of the
-		channels is not full volume and changes to the playCondition
-		are instant, producing (possibly undesirable) jumps in volume.
 	The slight difference between starting recording and releasing the
 		to end recording could possibly be corrected with a delayed call
 		to stop_rec() (delayed by the holdTime amount)
@@ -678,20 +663,18 @@ long remap(const long &x, const long &inMin, const long &inMax, const long &outM
 
 float MakePlayback(uint8_t playCondition, const float playbacks[3], LoopChannel* channels[3])
 {
-	/* FIXME:
-		Level logic in switch (playCondition) statements is suboptimal
-		and should still be refined.
-		The main issue that when a loop has been recorded but its volume
-		is turned down, the other loops should be able to "fill the void".
-		As it stands now, each channel occupies a equal fraction to the
-		number of recorded channels. If 2 channels have been recorded, the
-		channels can, at most, occupy 1/2 of the total voluem. If 3 channels 
-		have been recorded, 1/3.
+	/* playCondition
+		if (a) playCondtion + 1
+		if (b) playCondition + 2
+		if (c) playCondition + 4
 	*/
 	enum ch {a = 0, b, c};
 	float wet = 0.f;
 	switch (playCondition)
 	{
+		float lvls[3];
+		float makeup_gain[3];
+
 		case 0:
 			// loops recorded but no playbacks
 			break;
@@ -702,19 +685,37 @@ float MakePlayback(uint8_t playCondition, const float playbacks[3], LoopChannel*
 			wet = playbacks[b] * channels[b]->get_lvl();
 			break;
 		case 3:
-			wet = (playbacks[a] * (channels[a]->get_lvl()/2)) + (playbacks[b] * (channels[b]->get_lvl()/2));
+			lvls[a] = channels[a]->get_lvl();
+			lvls[b] = channels[b]->get_lvl();
+			makeup_gain[a] = 1.f - lvls[b];
+			makeup_gain[b] = 1.f - lvls[a];
+			wet = (playbacks[a] * (lvls[a]/2 + makeup_gain[a])) + (playbacks[b] * (lvls[b]/2 + makeup_gain[b]));
 			break;
 		case 4:
 			wet = playbacks[c] * channels[c]->get_lvl();
 			break;
 		case 5:
-			wet = (playbacks[a] * (channels[a]->get_lvl()/2)) + (playbacks[c] * (channels[c]->get_lvl()/2));
+			lvls[a] = channels[a]->get_lvl();
+			lvls[c] = channels[c]->get_lvl();
+			makeup_gain[a] = 1.f - lvls[c];
+			makeup_gain[c] = 1.f - lvls[a];
+			wet = (playbacks[a] * (lvls[a]/2 + makeup_gain[a])) + (playbacks[c] * (lvls[c]/2 + makeup_gain[c]));
 			break;
 		case 6:
-			wet = (playbacks[b] * (channels[b]->get_lvl()/2)) + (playbacks[c] * (channels[c]->get_lvl()/2));
+			lvls[b] = channels[b]->get_lvl();
+			lvls[c] = channels[c]->get_lvl();
+			makeup_gain[b] = 1.f - channels[c]->get_lvl();
+			makeup_gain[c] = 1.f - channels[b]->get_lvl();
+			wet = (playbacks[b] * (lvls[b]/2 + makeup_gain[b])) + (playbacks[c] * (lvls[c]/2 + makeup_gain[c]));
 			break;
 		case 7:
-			wet = (playbacks[a] * (channels[a]->get_lvl()/3)) + (playbacks[b] * (channels[b]->get_lvl()/3)) + (playbacks[c] *  (channels[c]->get_lvl()/3));
+			lvls[a] = channels[a]->get_lvl();
+			lvls[b] = channels[b]->get_lvl();
+			lvls[c] = channels[c]->get_lvl();
+			makeup_gain[a] = (2.f - lvls[b] - lvls[c]) / 2;
+			makeup_gain[b] = (2.f - lvls[a] - lvls[c]) / 2;
+			makeup_gain[c] = (2.f - lvls[a] - lvls[b]) / 2;
+			wet = (playbacks[a] * (lvls[a]/3 + makeup_gain[a])) + (playbacks[b] * (lvls[b]/3 + makeup_gain[b])) + (playbacks[c] * (lvls[c]/3 + makeup_gain[c]));
 			break;
 	}
 
