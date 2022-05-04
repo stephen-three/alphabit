@@ -779,7 +779,7 @@ void AudioCallback(daisy::AudioHandle::InputBuffer in, daisy::AudioHandle::Outpu
 
 		// footswitches
 		uint8_t fswCommand;
-		fswCommand = fsw.Handle(1000);
+		fswCommand = fsw.Handle();
 		static bool clearing = false;
 		static bool ghostKnobs = false;
 		static bool gk_takeBench = true;
@@ -800,30 +800,47 @@ void AudioCallback(daisy::AudioHandle::InputBuffer in, daisy::AudioHandle::Outpu
 				*/
 				break;
 			case 2:
-				if(A.resetEnabled())
+				if (fswHOLD)
 				{
-					A.ResetBuffer();
-					clearing = true;
-					setFltrA = false;
-					if (mode == 1)
+					if(A.resetEnabled())
 					{
-						if (!B.get_recdd()) B.set_play(false);
-						if (!C.get_recdd()) C.set_play(false);
+						A.ResetBuffer();
+						clearing = true;
+						setFltrA = false;
+						if (mode == 1)
+						{
+							if (!B.get_recdd()) B.set_play(false);
+							if (!C.get_recdd()) C.set_play(false);
+						}
+					}
+
+					if(B.resetEnabled())
+					{
+						B.ResetBuffer();
+						clearing = true;
+						setFltrB = false;
+					}
+
+					if(C.resetEnabled())
+					{
+						C.ResetBuffer();
+						clearing = true;
+						setFltrC = false;
 					}
 				}
-
-				if(B.resetEnabled())
+				else
 				{
-					B.ResetBuffer();
-					clearing = true;
-					setFltrB = false;
-				}
-
-				if(C.resetEnabled())
-				{
-					C.ResetBuffer();
-					clearing = true;
-					setFltrC = false;
+					A.toggle_play();
+					if (mode == 1)
+					{
+						B.set_play(!B.get_play());
+						C.set_play(!C.get_play());
+					}
+					else
+					{
+						B.toggle_play();
+						C.toggle_play();
+					}
 				}
 				break;
 			case 3:
