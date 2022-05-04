@@ -216,6 +216,7 @@ enum AdcChannel
 };
 daisy::AdcChannelConfig adc_config[NUM_ADC_CHANNELS];
 // output pins, LEDs
+daisy::GPIO byp_relay; // toggles a relay via an NPN transistor
 daisy::GPIO bypR;
 daisy::GPIO bypGB;
 daisy::GPIO ledR;
@@ -287,6 +288,7 @@ int main(void)
 		{
 			// digital pins
 			using namespace daisy;
+			byp_relay.Init(D0, GPIO::Mode::OUTPUT);
 			bypR.Init(D8, GPIO::Mode::OUTPUT);
 			bypGB.Init(D9, GPIO::Mode::OUTPUT);
 			ledR.Init(D10, GPIO::Mode::OUTPUT);
@@ -300,6 +302,7 @@ int main(void)
 	}
 	hw.adc.Init(adc_config, NUM_ADC_CHANNELS);
 	hw.adc.Start();
+	byp_relay.Write(true);
 
 	bypR.Write(false);
 	bypGB.Write(false);
@@ -794,11 +797,7 @@ void AudioCallback(daisy::AudioHandle::InputBuffer in, daisy::AudioHandle::Outpu
 			case 1:
 				// bypass
 				byp = !byp;
-				/* !final form
-				Relay Bypass controlled by bypass() func
-				that both toggles bool byp and flips the 
-				NPN transistor connected to the relay.
-				*/
+				byp_relay.Write(byp);
 				break;
 			case 2:
 				if (fswHOLD)
@@ -1254,9 +1253,6 @@ void AudioCallback(daisy::AudioHandle::InputBuffer in, daisy::AudioHandle::Outpu
 		if (byp)
 		{
 			out[0][i] = dry;
-			/* !final form
-				This would be unnecessary with the Relay bypass
-			*/
 		}
 		else
 		{
