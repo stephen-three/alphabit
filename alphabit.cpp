@@ -1,5 +1,5 @@
 // alphabit.cpp
-// ver_00e
+// ver_00f
 //
 // Three Channel Looper
 // 
@@ -9,7 +9,7 @@
 #include "daisysp.h"
 #include <string>
 
-const std::string ver = "alphabit_00e";
+const std::string ver = "alphabit_00f";
 const std::string notes = "Tested. Working as intended.";
 
 /*	TODO:
@@ -190,6 +190,11 @@ public:
 	}
 
 	int Handle(uint16_t holdTime = 600);
+
+	long get_releaseTime()
+	{
+		return rleasTime;
+	}
 };
 
 
@@ -631,6 +636,7 @@ int Footswitch::Handle(uint16_t holdTime /* =600 */)
 		{
 			input = 4;
 			hold = false;
+			rleasTime = daisy::System::GetNow();
 		}
 	}
 
@@ -862,10 +868,24 @@ void AudioCallback(daisy::AudioHandle::InputBuffer in, daisy::AudioHandle::Outpu
 
 		if (fswHOLD)
 		{
-			fswCommand = fswA.Handle(90);
+			static bool dlayRECstop[3] = {false, false, false};
+			enum {a = 0, b, c};
+			const uint8_t rec_dlay = 90;
+
+			fswCommand = fswA.Handle(rec_dlay);
 			switch (fswCommand)
 			{
 				case 0:
+					if (dlayRECstop[a] && daisy::System::GetNow() - fswA.get_releaseTime() > rec_dlay)
+					{
+						A.stop_REC();
+						dlayRECstop[a] = false;
+					}
+					/* 
+						Delaying the stop_REC() by the same amount as
+						the start_REC() gives a much more consistent
+						and generally better feeling to using hold-to-REC
+					*/
 					break;
 				case 1:
 					A.toggle_play();
@@ -892,15 +912,20 @@ void AudioCallback(daisy::AudioHandle::InputBuffer in, daisy::AudioHandle::Outpu
 				case 4:
 					if (A.get_rec())
 					{
-						A.stop_REC();
+						dlayRECstop[a] = true;
 					}
 					break;
 			}
 		
-			fswCommand = fswB.Handle(90);
+			fswCommand = fswB.Handle(rec_dlay);
 			switch (fswCommand)
 			{
 				case 0:
+					if (dlayRECstop[b] && daisy::System::GetNow() - fswB.get_releaseTime() > rec_dlay)
+					{
+						B.stop_REC();
+						dlayRECstop[b] = false;
+					}
 					break;
 				case 1:
 					if (mode == 1)
@@ -931,15 +956,20 @@ void AudioCallback(daisy::AudioHandle::InputBuffer in, daisy::AudioHandle::Outpu
 				case 4:
 					if (B.get_rec())
 					{
-						B.stop_REC();
+						dlayRECstop[b] = true;
 					}
 					break;
 			}
 		
-			fswCommand = fswC.Handle(90);
+			fswCommand = fswC.Handle(rec_dlay);
 			switch (fswCommand)
 			{
 				case 0:
+					if (dlayRECstop[c] && daisy::System::GetNow() - fswC.get_releaseTime() > rec_dlay)
+					{
+						C.stop_REC();
+						dlayRECstop[c] = false;
+					}
 					break;
 				case 1:
 					if (mode == 1)
@@ -968,7 +998,7 @@ void AudioCallback(daisy::AudioHandle::InputBuffer in, daisy::AudioHandle::Outpu
 				case 4:
 					if (C.get_rec())
 					{
-						C.stop_REC();
+						dlayRECstop[c] = true;
 					}
 					break;
 			}
