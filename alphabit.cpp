@@ -99,9 +99,9 @@ public:
 		if (recorded) play = !play;
 	}
 
-	inline void set_play(bool b)
+	inline void set_play(bool p)
 	{
-		play = b;
+		play = p;
 	}
 
 	inline void set_rvrs(bool setting)
