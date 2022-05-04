@@ -7,18 +7,9 @@
 
 #include "daisy_seed.h"
 #include "daisysp.h"
-#include <string>
 
 const std::string ver = "alphabit_00f";
 const std::string notes = "Tested. Working as intended.";
-
-/*	TODO:
-	The slight difference between starting recording and releasing the
-		to end recording could possibly be corrected with a delayed call
-		to stop_rec() (delayed by the holdTime amount)
-		Maybe also reduce holdTime while still consistently getting single
-		presses when desired.
-*/
 
 #define MAX_SIZE (96000 * 30) // 30 sec of floats at 96 kHz
 #define FREQ_MAX 2000 // 2kHz
@@ -191,7 +182,7 @@ public:
 
 	int Handle(uint16_t holdTime = 600);
 
-	long get_releaseTime()
+	inline long get_releaseTime()
 	{
 		return rleasTime;
 	}
