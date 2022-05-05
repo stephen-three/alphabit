@@ -51,7 +51,7 @@ The Mix knob sets the wet/dry mix between the incoming signal and the playback o
 The Volume knob affects the final output volume. If the knob is set at "noon" there will be no volume change between the input and output. Turning the knob counter-clockwise away from noon will reduce the output volume and turning it clockwise will increase volume. 
   
 #### Time Knobs
-The Time knobs control the speed of the loop's playback, which can range from a quarter slower to four times faster. With the knob at noon, the loop will play at its original speed. Turning the knob counter-clockwise will reduce the speed and turning it clockwise will increase the speed. The pitch of the loop is proportionally affected by the speed because the loop is being read back at a different rate, much like slowed cassette tapes.
+The Time knobs control the speed of the loop's playback, which can range from a quarter slower to four times faster. With the knob at noon, the loop will play at its original speed. Turning the knob counter-clockwise will reduce the speed and turning it clockwise will increase the speed. The pitch of the loop is proportionally affected by the speed because the loop is being read back at a different rate, much like slowed cassette tapes. In mode 2, since loops B and C are stretched and compressed to match loop A's duration, only channel A's Time knob will have an effect.
   
 #### Level Knobs
 The Level knobs control the relative volume of the loops. These can be used to mix the output and highlight one loop over another. These knobs are also used to set the tone filters for the corresponding channels when the byp footswitch is held down.
