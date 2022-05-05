@@ -97,8 +97,7 @@ public:
 
     inline void toggle_play()
     {
-        if (recorded)
-            play = !play;
+        if (recorded) play = !play;
     }
 
     inline void set_play(bool p)
@@ -318,32 +317,27 @@ int main(void)
         ledB.Write(true);
         uint32_t time = System::GetNow();
         while (System::GetNow() < time + 450)
-        {
-        }
+        {}
         ledR.Write(false);
         ledG.Write(true);
         time = System::GetNow();
         while (System::GetNow() < time + 450)
-        {
-        }
+        {}
         ledR.Write(true);
         ledG.Write(true);
         ledB.Write(false);
         time = System::GetNow();
         while (System::GetNow() < time + 450)
-        {
-        }
+        {}
         ledB.Write(true);
         time = System::GetNow();
         while (System::GetNow() < time + 600)
-        {
-        }
+        {}
         bypR.Write(true);
         bypGB.Write(true);
         time = System::GetNow();
         while (System::GetNow() < time + 800)
-        {
-        }
+        {}
         bypR.Write(false);
         bypGB.Write(false);
         ledR.Write(false);
@@ -351,8 +345,7 @@ int main(void)
         ledB.Write(false);
         time = System::GetNow();
         while (System::GetNow() < time + 300)
-        {
-        }
+        {}
     }
     fswHOLD = fwsBehavior.Read();
     A.ClearLoop();
@@ -361,8 +354,7 @@ int main(void)
 
     hw.StartAudio(AudioCallback);
     while (1)
-    {
-    }
+    {}
 }
 
 // class function definitions
@@ -438,8 +430,7 @@ void LoopChannel::NextSample(float &playback, daisy::AudioHandle::InputBuffer in
         len = 0;
     }
 
-    if (play)
-        Shift_position();
+    if (play) Shift_position();
 }
 
 void LoopChannel::NextSample_1(float &playback, daisy::AudioHandle::InputBuffer in, size_t i, LoopChannel *a)
@@ -462,8 +453,7 @@ void LoopChannel::NextSample_1(float &playback, daisy::AudioHandle::InputBuffer 
         len = 0;
     }
 
-    if (play)
-        Shift_position(a);
+    if (play) Shift_position(a);
 }
 
 void LoopChannel::NextSample_2(float &playback, daisy::AudioHandle::InputBuffer in, size_t i, LoopChannel *a)
@@ -492,8 +482,7 @@ void LoopChannel::NextSample_2(float &playback, daisy::AudioHandle::InputBuffer 
         playbackSpeed = retime * a->playbackSpeed;
     }
 
-    if (play)
-        Shift_position();
+    if (play) Shift_position();
 }
 
 void LoopChannel::WriteBuffer(daisy::AudioHandle::InputBuffer in, size_t i)
@@ -503,8 +492,7 @@ void LoopChannel::WriteBuffer(daisy::AudioHandle::InputBuffer in, size_t i)
         p_loop[position] = in[0][i];
         len++;
     }
-    else
-        p_loop[position] = (p_loop[position] * 0.5) + (in[0][i] * 0.5);
+    else p_loop[position] = (p_loop[position] * 0.5) + (in[0][i] * 0.5);
 }
 
 void LoopChannel::Shift_position()
@@ -524,20 +512,16 @@ void LoopChannel::Shift_position()
             indexTracker += playbackSpeed;
             if (indexTracker >= 100)
             {
-                if (rvrs)
-                    position--;
-                else
-                    position++;
+                if (rvrs) position--;
+                else position++;
                 indexTracker -= 100;
             }
         }
         // normal playback
         else if (playbackSpeed == 100)
         {
-            if (rvrs)
-                position--;
-            else
-                position++;
+            if (rvrs) position--;
+            else position++;
         }
         // compress
         else if (playbackSpeed > 100)
@@ -553,15 +537,11 @@ void LoopChannel::Shift_position()
                 rateRemainder = remainMod;
                 pushVal += remainTRUNC;
             }
-            if (rvrs)
-                position -= pushVal;
-            else
-                position += pushVal;
+            if (rvrs) position -= pushVal;
+            else position += pushVal;
         }
-        if (rvrs && position < 0)
-            position = mod;
-        else
-            position %= mod;
+        if (rvrs && position < 0) position = mod;
+        else position %= mod;
     }
 }
 
@@ -579,19 +559,15 @@ void LoopChannel::Shift_position(LoopChannel *a)
             indexTracker += playbackSpeed;
             if (indexTracker >= 100)
             {
-                if (rvrs)
-                    position--;
-                else
-                    position++;
+                if (rvrs) position--;
+                else position++;
                 indexTracker -= 100;
             }
         }
         else if (playbackSpeed == 100)
         {
-            if (rvrs)
-                position--;
-            else
-                position++;
+            if (rvrs) position--;
+            else position++;
         }
         else if (playbackSpeed > 100)
         {
@@ -606,10 +582,8 @@ void LoopChannel::Shift_position(LoopChannel *a)
                 rateRemainder = remainMod;
                 pushVal += remainTRUNC;
             }
-            if (rvrs)
-                position -= pushVal;
-            else
-                position += pushVal;
+            if (rvrs) position -= pushVal;
+            else position += pushVal;
         }
         // !!!
         if (rvrs && position < 0)
@@ -639,9 +613,10 @@ int Footswitch::Handle(uint16_t holdTime /* =600 */)
         hold = false;
 
         if ((daisy::System::GetNow() - rleasTime) < dcTimeOut && !dcWhenReleased && dcWait)
+        {
             dcWhenReleased = true;
-        else
-            dcWhenReleased = false;
+        }
+        else dcWhenReleased = false;
         dcWait = false;
     }
     // released
@@ -650,8 +625,7 @@ int Footswitch::Handle(uint16_t holdTime /* =600 */)
         if (!ignrRelease)
         {
             rleasTime = daisy::System::GetNow();
-            if (!dcWhenReleased)
-                dcWait = true;
+            if (!dcWhenReleased) dcWait = true;
             // double click
             else
             {
@@ -788,12 +762,9 @@ void AudioCallback(daisy::AudioHandle::InputBuffer in, daisy::AudioHandle::Outpu
         static Footswitch fswC(daisy::seed::D30);
 
         uint16_t md = hw.adc.Get(modeSw) / 64; // value: 0-65536/64 = 0-1024
-        if (md < 124)
-            mode = 1;
-        else if (md < 900)
-            mode = 3;
-        else
-            mode = 2;
+        if (md < 124) mode = 1;
+        else if (md < 900) mode = 3;
+        else mode = 2;
 
         mix = hw.adc.GetFloat(mixPot); // value: 0-1.0
         vol = hw.adc.GetFloat(volPot);
@@ -808,30 +779,21 @@ void AudioCallback(daisy::AudioHandle::InputBuffer in, daisy::AudioHandle::Outpu
 
         uint16_t time = hw.adc.Get(timeApot) / 64;
         uint16_t speed = 0;
-        if (time > 476 && time < 548)
-            speed = 100;
-        else if (time <= 476)
-            speed = remap(time, 0, 476, 400, 100);
-        else if (time >= 548)
-            speed = remap(time, 548, 1024, 100, 25);
+        if (time > 476 && time < 548) speed = 100;
+        else if (time <= 476) speed = remap(time, 0, 476, 400, 100);
+        else if (time >= 548) speed = remap(time, 548, 1024, 100, 25);
         A.set_speed(speed);
 
         time = hw.adc.Get(timeBpot) / 64;
-        if (time > 476 && time < 548)
-            speed = 100;
-        else if (time <= 476)
-            speed = remap(time, 0, 476, 400, 100);
-        else if (time >= 548)
-            speed = remap(time, 548, 1024, 100, 25);
+        if (time > 476 && time < 548) speed = 100;
+        else if (time <= 476) speed = remap(time, 0, 476, 400, 100);
+        else if (time >= 548) speed = remap(time, 548, 1024, 100, 25);
         B.set_speed(speed);
 
         time = hw.adc.Get(timeCpot) / 64;
-        if (time > 476 && time < 548)
-            speed = 100;
-        else if (time <= 476)
-            speed = remap(time, 0, 476, 400, 100);
-        else if (time >= 548)
-            speed = remap(time, 548, 1024, 100, 25);
+        if (time > 476 && time < 548) speed = 100;
+        else if (time <= 476) speed = remap(time, 0, 476, 400, 100);
+        else if (time >= 548) speed = remap(time, 548, 1024, 100, 25);
         C.set_speed(speed);
 
         // footswitches
@@ -845,218 +807,209 @@ void AudioCallback(daisy::AudioHandle::InputBuffer in, daisy::AudioHandle::Outpu
         static uint16_t freqC_benchMark = 0;
         switch (fswCommand)
         {
-        case 0:
-            break;
-        case 1:
-            // bypass
-            byp = !byp;
-            byp_relay.Write(byp);
-            break;
-        case 2:
-            if (fswHOLD)
-            {
-                if (A.resetEnabled())
+            case 0:
+                break;
+            case 1:
+                // bypass
+                byp = !byp;
+                byp_relay.Write(byp);
+                break;
+            case 2:
+                if (fswHOLD)
                 {
-                    A.ResetBuffer();
-                    clearing = true;
-                    setFltrA = false;
-                    if (mode == 1)
+                    if (A.resetEnabled())
                     {
-                        if (!B.get_recdd())
-                            B.set_play(false);
-                        if (!C.get_recdd())
-                            C.set_play(false);
+                        A.ResetBuffer();
+                        clearing = true;
+                        setFltrA = false;
+                        if (mode == 1)
+                        {
+                            if (!B.get_recdd()) B.set_play(false);
+                            if (!C.get_recdd()) C.set_play(false);
+                        }
                     }
-                }
 
-                if (B.resetEnabled())
-                {
-                    B.ResetBuffer();
-                    clearing = true;
-                    setFltrB = false;
-                }
+                    if (B.resetEnabled())
+                    {
+                        B.ResetBuffer();
+                        clearing = true;
+                        setFltrB = false;
+                    }
 
-                if (C.resetEnabled())
-                {
-                    C.ResetBuffer();
-                    clearing = true;
-                    setFltrC = false;
-                }
-            }
-            else
-            {
-                A.toggle_play();
-                if (mode == 1)
-                {
-                    B.set_play(!B.get_play());
-                    C.set_play(!C.get_play());
+                    if (C.resetEnabled())
+                    {
+                        C.ResetBuffer();
+                        clearing = true;
+                        setFltrC = false;
+                    }
                 }
                 else
                 {
-                    B.toggle_play();
-                    C.toggle_play();
+                    A.toggle_play();
+                    if (mode == 1)
+                    {
+                        B.set_play(!B.get_play());
+                        C.set_play(!C.get_play());
+                    }
+                    else
+                    {
+                        B.toggle_play();
+                        C.toggle_play();
+                    }
                 }
-            }
-            break;
-        case 3:
-            // ghost knobs
-            ghostKnobs = true;
-            if (gk_takeBench)
-            {
-                freqA_benchMark = hw.adc.Get(lvlApot) / 64;
-                freqB_benchMark = hw.adc.Get(lvlBpot) / 64;
-                freqC_benchMark = hw.adc.Get(lvlCpot) / 64;
-                gk_takeBench = false;
-            }
-            break;
-        case 4:
-            ghostKnobs = false;
-            gk_takeBench = true;
-            break;
+                break;
+            case 3:
+                // ghost knobs
+                ghostKnobs = true;
+                if (gk_takeBench)
+                {
+                    freqA_benchMark = hw.adc.Get(lvlApot) / 64;
+                    freqB_benchMark = hw.adc.Get(lvlBpot) / 64;
+                    freqC_benchMark = hw.adc.Get(lvlCpot) / 64;
+                    gk_takeBench = false;
+                }
+                break;
+            case 4:
+                ghostKnobs = false;
+                gk_takeBench = true;
+                break;
         }
 
         if (fswHOLD)
         {
             static bool dlayRECstop[3] = {false, false, false};
-            enum
-            {
-                a = 0,
-                b,
-                c
-            };
+            enum {a = 0, b, c};
             const uint8_t rec_dlay = 90;
 
             fswCommand = fswA.Handle(rec_dlay);
             switch (fswCommand)
             {
-            case 0:
-                if (dlayRECstop[a] && daisy::System::GetNow() - fswA.get_releaseTime() > rec_dlay)
-                {
-                    A.stop_REC();
-                    dlayRECstop[a] = false;
-                }
-                /*
-                    Delaying the stop_REC() by the same amount as
-                    the start_REC() gives a much more consistent
-                    and generally better feeling to using hold-to-REC
-                */
-                break;
-            case 1:
-                A.toggle_play();
-                break;
-            case 2:
-                if (A.resetEnabled())
-                {
-                    A.ResetBuffer();
-                    clearing = true;
-                    if (mode == 1)
+                case 0:
+                    if (dlayRECstop[a] && daisy::System::GetNow() - fswA.get_releaseTime() > rec_dlay)
                     {
-                        if (!B.get_recdd())
-                            B.set_play(false);
-                        if (!C.get_recdd())
-                            C.set_play(false);
+                        A.stop_REC();
+                        dlayRECstop[a] = false;
                     }
-                    setFltrA = false;
-                }
-                break;
-            case 3:
-                if (!A.get_rec())
-                {
-                    A.start_REC();
-                }
-                break;
-            case 4:
-                if (A.get_rec())
-                {
-                    dlayRECstop[a] = true;
-                }
-                break;
+                    /*
+                        Delaying the stop_REC() by the same amount as
+                        the start_REC() gives a much more consistent
+                        and generally better feeling to using hold-to-REC
+                    */
+                    break;
+                case 1:
+                    A.toggle_play();
+                    break;
+                case 2:
+                    if (A.resetEnabled())
+                    {
+                        A.ResetBuffer();
+                        clearing = true;
+                        if (mode == 1)
+                        {
+                            if (!B.get_recdd()) B.set_play(false);
+                            if (!C.get_recdd()) C.set_play(false);
+                        }
+                        setFltrA = false;
+                    }
+                    break;
+                case 3:
+                    if (!A.get_rec())
+                    {
+                        A.start_REC();
+                    }
+                    break;
+                case 4:
+                    if (A.get_rec())
+                    {
+                        dlayRECstop[a] = true;
+                    }
+                    break;
             }
 
             fswCommand = fswB.Handle(rec_dlay);
             switch (fswCommand)
             {
-            case 0:
-                if (dlayRECstop[b] && daisy::System::GetNow() - fswB.get_releaseTime() > rec_dlay)
-                {
-                    B.stop_REC();
-                    dlayRECstop[b] = false;
-                }
-                break;
-            case 1:
-                if (mode == 1)
-                {
-                    B.set_play(!B.get_play());
-                    // toggle_play() only toggles if recorded==true
-                    // which is not necessary in Mode 1
-                }
-                else
-                {
-                    B.toggle_play();
-                }
-                break;
-            case 2:
-                if (B.resetEnabled())
-                {
-                    B.ResetBuffer();
-                    clearing = true;
-                    setFltrB = false;
-                }
-                break;
-            case 3:
-                if (!B.get_rec())
-                {
-                    B.start_REC();
-                }
-                break;
-            case 4:
-                if (B.get_rec())
-                {
-                    dlayRECstop[b] = true;
-                }
-                break;
+                case 0:
+                    if (dlayRECstop[b] && daisy::System::GetNow() - fswB.get_releaseTime() > rec_dlay)
+                    {
+                        B.stop_REC();
+                        dlayRECstop[b] = false;
+                    }
+                    break;
+                case 1:
+                    if (mode == 1)
+                    {
+                        B.set_play(!B.get_play());
+                        // toggle_play() only toggles if recorded==true
+                        // which is not necessary in Mode 1
+                    }
+                    else
+                    {
+                        B.toggle_play();
+                    }
+                    break;
+                case 2:
+                    if (B.resetEnabled())
+                    {
+                        B.ResetBuffer();
+                        clearing = true;
+                        setFltrB = false;
+                    }
+                    break;
+                case 3:
+                    if (!B.get_rec())
+                    {
+                        B.start_REC();
+                    }
+                    break;
+                case 4:
+                    if (B.get_rec())
+                    {
+                        dlayRECstop[b] = true;
+                    }
+                    break;
             }
 
             fswCommand = fswC.Handle(rec_dlay);
             switch (fswCommand)
             {
-            case 0:
-                if (dlayRECstop[c] && daisy::System::GetNow() - fswC.get_releaseTime() > rec_dlay)
-                {
-                    C.stop_REC();
-                    dlayRECstop[c] = false;
-                }
-                break;
-            case 1:
-                if (mode == 1)
-                {
-                    C.set_play(!C.get_play());
-                }
-                else
-                {
-                    C.toggle_play();
-                }
-                break;
-            case 2:
-                if (C.resetEnabled())
-                {
-                    C.ResetBuffer();
-                    clearing = true;
-                    setFltrC = false;
-                }
-                break;
-            case 3:
-                if (!C.get_rec())
-                {
-                    C.start_REC();
-                }
-                break;
-            case 4:
-                if (C.get_rec())
-                {
-                    dlayRECstop[c] = true;
-                }
-                break;
+                case 0:
+                    if (dlayRECstop[c] && daisy::System::GetNow() - fswC.get_releaseTime() > rec_dlay)
+                    {
+                        C.stop_REC();
+                        dlayRECstop[c] = false;
+                    }
+                    break;
+                case 1:
+                    if (mode == 1)
+                    {
+                        C.set_play(!C.get_play());
+                    }
+                    else
+                    {
+                        C.toggle_play();
+                    }
+                    break;
+                case 2:
+                    if (C.resetEnabled())
+                    {
+                        C.ResetBuffer();
+                        clearing = true;
+                        setFltrC = false;
+                    }
+                    break;
+                case 3:
+                    if (!C.get_rec())
+                    {
+                        C.start_REC();
+                    }
+                    break;
+                case 4:
+                    if (C.get_rec())
+                    {
+                        dlayRECstop[c] = true;
+                    }
+                    break;
             }
         }
         else
@@ -1064,112 +1017,110 @@ void AudioCallback(daisy::AudioHandle::InputBuffer in, daisy::AudioHandle::Outpu
             fswCommand = fswA.Handle();
             switch (fswCommand)
             {
-            case 0:
-                break;
-            case 1:
-                // toggle REC
-                if (A.get_rec())
-                {
-                    A.stop_REC();
-                }
-                else
-                {
-                    A.start_REC();
-                }
-                break;
-            case 2:
-                A.toggle_play();
-                break;
-            case 3:
-                // clear loop
-                if (A.resetEnabled())
-                {
-                    A.ResetBuffer();
-                    clearing = true;
-                    if (mode == 1)
+                case 0:
+                    break;
+                case 1:
+                    // toggle REC
+                    if (A.get_rec())
                     {
-                        if (!B.get_recdd())
-                            B.set_play(false);
-                        if (!C.get_recdd())
-                            C.set_play(false);
+                        A.stop_REC();
                     }
-                    setFltrA = false;
-                }
-                break;
+                    else
+                    {
+                        A.start_REC();
+                    }
+                    break;
+                case 2:
+                    A.toggle_play();
+                    break;
+                case 3:
+                    // clear loop
+                    if (A.resetEnabled())
+                    {
+                        A.ResetBuffer();
+                        clearing = true;
+                        if (mode == 1)
+                        {
+                            if (!B.get_recdd()) B.set_play(false);
+                            if (!C.get_recdd()) C.set_play(false);
+                        }
+                        setFltrA = false;
+                    }
+                    break;
             }
 
             fswCommand = fswB.Handle();
             switch (fswCommand)
             {
-            case 0:
-                break;
-            case 1:
-                // toggle REC
-                if (B.get_rec())
-                {
-                    B.stop_REC();
-                }
-                else
-                {
-                    B.start_REC();
-                }
-                break;
-            case 2:
-                if (mode == 1)
-                {
-                    B.set_play(!B.get_play());
-                }
-                else
-                {
-                    B.toggle_play();
-                }
-                break;
-            case 3:
-                // clear loop
-                if (B.resetEnabled())
-                {
-                    B.ResetBuffer();
-                    clearing = true;
-                    setFltrB = false;
-                }
-                break;
+                case 0:
+                    break;
+                case 1:
+                    // toggle REC
+                    if (B.get_rec())
+                    {
+                        B.stop_REC();
+                    }
+                    else
+                    {
+                        B.start_REC();
+                    }
+                    break;
+                case 2:
+                    if (mode == 1)
+                    {
+                        B.set_play(!B.get_play());
+                    }
+                    else
+                    {
+                        B.toggle_play();
+                    }
+                    break;
+                case 3:
+                    // clear loop
+                    if (B.resetEnabled())
+                    {
+                        B.ResetBuffer();
+                        clearing = true;
+                        setFltrB = false;
+                    }
+                    break;
             }
 
             fswCommand = fswC.Handle();
             switch (fswCommand)
             {
-            case 0:
-                break;
-            case 1:
-                // toggle REC
-                if (C.get_rec())
-                {
-                    C.stop_REC();
-                }
-                else
-                {
-                    C.start_REC();
-                }
-                break;
-            case 2:
-                if (mode == 1)
-                {
-                    C.set_play(!C.get_play());
-                }
-                else
-                {
-                    C.toggle_play();
-                }
-                break;
-            case 3:
-                // clear loop
-                if (C.resetEnabled())
-                {
-                    C.ResetBuffer();
-                    clearing = true;
-                    setFltrC = false;
-                }
-                break;
+                case 0:
+                    break;
+                case 1:
+                    // toggle REC
+                    if (C.get_rec())
+                    {
+                        C.stop_REC();
+                    }
+                    else
+                    {
+                        C.start_REC();
+                    }
+                    break;
+                case 2:
+                    if (mode == 1)
+                    {
+                        C.set_play(!C.get_play());
+                    }
+                    else
+                    {
+                        C.toggle_play();
+                    }
+                    break;
+                case 3:
+                    // clear loop
+                    if (C.resetEnabled())
+                    {
+                        C.ResetBuffer();
+                        clearing = true;
+                        setFltrC = false;
+                    }
+                    break;
             }
         }
 
@@ -1278,10 +1229,8 @@ void AudioCallback(daisy::AudioHandle::InputBuffer in, daisy::AudioHandle::Outpu
             ledB.Write(false);
             bypR.Write(false);
             bypGB.Write(false);
-            if (cueCount % 2 != 0)
-                ledG.Write(true);
-            else if (cueCount < 5)
-                ledG.Write(false);
+            if (cueCount % 2 != 0) ledG.Write(true);
+            else if (cueCount < 5) ledG.Write(false);
             else
             {
                 ledG.Write(false);
@@ -1318,26 +1267,23 @@ void AudioCallback(daisy::AudioHandle::InputBuffer in, daisy::AudioHandle::Outpu
         A.NextSample(playbackA, in, i);
         switch (mode)
         {
-        case 1:
-            B.NextSample_1(playbackB, in, i, &A);
-            C.NextSample_1(playbackC, in, i, &A);
-            break;
-        case 2:
-            B.NextSample_2(playbackB, in, i, &A);
-            C.NextSample_2(playbackC, in, i, &A);
-            break;
-        default:
-            B.NextSample(playbackB, in, i);
-            C.NextSample(playbackC, in, i);
-            break;
+            case 1:
+                B.NextSample_1(playbackB, in, i, &A);
+                C.NextSample_1(playbackC, in, i, &A);
+                break;
+            case 2:
+                B.NextSample_2(playbackB, in, i, &A);
+                C.NextSample_2(playbackC, in, i, &A);
+                break;
+            default:
+                B.NextSample(playbackB, in, i);
+                C.NextSample(playbackC, in, i);
+                break;
         }
 
-        if (setFltrA)
-            playbackA = fltrA.Process(playbackA);
-        if (setFltrB)
-            playbackB = fltrB.Process(playbackB);
-        if (setFltrC)
-            playbackC = fltrC.Process(playbackC);
+        if (setFltrA) playbackA = fltrA.Process(playbackA);
+        if (setFltrB) playbackB = fltrB.Process(playbackB);
+        if (setFltrC) playbackC = fltrC.Process(playbackC);
 
         float dry = in[0][i];
         float wet = 0.f;
@@ -1357,37 +1303,36 @@ void AudioCallback(daisy::AudioHandle::InputBuffer in, daisy::AudioHandle::Outpu
             LoopChannel *channels[3] = {&A, &B, &C};
 
             uint8_t playCondition = 0;
-            if (recordedA && A.get_play())
-                playCondition += 1;
+            if (recordedA && A.get_play()) playCondition += 1;
             if (mode == 1)
             {
                 bool rec_ingB = B.get_rec();
                 bool rec_ingC = C.get_rec();
-                if ((recordedA && playB) || rec_ingB)
-                    playCondition += 2;
-                if ((recordedA && playC) || rec_ingC)
-                    playCondition += 4;
+                if ((recordedA && playB) || rec_ingB) playCondition += 2;
+                if ((recordedA && playC) || rec_ingC) playCondition += 4;
 
                 if (recordedA || rec_ingB || rec_ingC)
                 {
                     wet = MakePlayback(playCondition, playbacks, channels);
                 }
                 else
+                {
                     wet = dry;
+                }
             }
             else
             {
-                if (recordedB && playB)
-                    playCondition += 2;
-                if (recordedC && playC)
-                    playCondition += 4;
+                if (recordedB && playB) playCondition += 2;
+                if (recordedC && playC) playCondition += 4;
 
                 if (recordedA || recordedB || recordedC)
                 {
                     wet = MakePlayback(playCondition, playbacks, channels);
                 }
                 else
+                {
                     wet = dry;
+                }
             }
 
             cf.SetPos(mix);
