@@ -681,60 +681,55 @@ float MakePlayback(uint8_t playCondition, const float playbacks[3], LoopChannel 
         if (b) playCondition + 2
         if (c) playCondition + 4
     */
-    enum ch
-    {
-        a = 0,
-        b,
-        c
-    };
+    enum ch {a = 0, b, c};
     float wet = 0.f;
     switch (playCondition)
     {
         float lvls[3];
         float makeup_gain[3];
 
-    case 0:
-        // loops recorded but no playbacks
-        break;
-    case 1:
-        wet = playbacks[a] * channels[a]->get_lvl();
-        break;
-    case 2:
-        wet = playbacks[b] * channels[b]->get_lvl();
-        break;
-    case 3:
-        lvls[a] = channels[a]->get_lvl();
-        lvls[b] = channels[b]->get_lvl();
-        makeup_gain[a] = 1.f - lvls[b];
-        makeup_gain[b] = 1.f - lvls[a];
-        wet = (playbacks[a] * (lvls[a] / 2 + makeup_gain[a])) + (playbacks[b] * (lvls[b] / 2 + makeup_gain[b]));
-        break;
-    case 4:
-        wet = playbacks[c] * channels[c]->get_lvl();
-        break;
-    case 5:
-        lvls[a] = channels[a]->get_lvl();
-        lvls[c] = channels[c]->get_lvl();
-        makeup_gain[a] = 1.f - lvls[c];
-        makeup_gain[c] = 1.f - lvls[a];
-        wet = (playbacks[a] * (lvls[a] / 2 + makeup_gain[a])) + (playbacks[c] * (lvls[c] / 2 + makeup_gain[c]));
-        break;
-    case 6:
-        lvls[b] = channels[b]->get_lvl();
-        lvls[c] = channels[c]->get_lvl();
-        makeup_gain[b] = 1.f - channels[c]->get_lvl();
-        makeup_gain[c] = 1.f - channels[b]->get_lvl();
-        wet = (playbacks[b] * (lvls[b] / 2 + makeup_gain[b])) + (playbacks[c] * (lvls[c] / 2 + makeup_gain[c]));
-        break;
-    case 7:
-        lvls[a] = channels[a]->get_lvl();
-        lvls[b] = channels[b]->get_lvl();
-        lvls[c] = channels[c]->get_lvl();
-        makeup_gain[a] = (2.f - lvls[b] - lvls[c]) / 2;
-        makeup_gain[b] = (2.f - lvls[a] - lvls[c]) / 2;
-        makeup_gain[c] = (2.f - lvls[a] - lvls[b]) / 2;
-        wet = (playbacks[a] * (lvls[a] / 3 + makeup_gain[a])) + (playbacks[b] * (lvls[b] / 3 + makeup_gain[b])) + (playbacks[c] * (lvls[c] / 3 + makeup_gain[c]));
-        break;
+        case 0:
+            // loops recorded but no playbacks
+            break;
+        case 1:
+            wet = playbacks[a] * channels[a]->get_lvl();
+            break;
+        case 2:
+            wet = playbacks[b] * channels[b]->get_lvl();
+            break;
+        case 3:
+            lvls[a] = channels[a]->get_lvl();
+            lvls[b] = channels[b]->get_lvl();
+            makeup_gain[a] = 1.f - lvls[b];
+            makeup_gain[b] = 1.f - lvls[a];
+            wet = (playbacks[a] * (lvls[a] / 2 + makeup_gain[a])) + (playbacks[b] * (lvls[b] / 2 + makeup_gain[b]));
+            break;
+        case 4:
+            wet = playbacks[c] * channels[c]->get_lvl();
+            break;
+        case 5:
+            lvls[a] = channels[a]->get_lvl();
+            lvls[c] = channels[c]->get_lvl();
+            makeup_gain[a] = 1.f - lvls[c];
+            makeup_gain[c] = 1.f - lvls[a];
+            wet = (playbacks[a] * (lvls[a] / 2 + makeup_gain[a])) + (playbacks[c] * (lvls[c] / 2 + makeup_gain[c]));
+            break;
+        case 6:
+            lvls[b] = channels[b]->get_lvl();
+            lvls[c] = channels[c]->get_lvl();
+            makeup_gain[b] = 1.f - channels[c]->get_lvl();
+            makeup_gain[c] = 1.f - channels[b]->get_lvl();
+            wet = (playbacks[b] * (lvls[b] / 2 + makeup_gain[b])) + (playbacks[c] * (lvls[c] / 2 + makeup_gain[c]));
+            break;
+        case 7:
+            lvls[a] = channels[a]->get_lvl();
+            lvls[b] = channels[b]->get_lvl();
+            lvls[c] = channels[c]->get_lvl();
+            makeup_gain[a] = (2.f - lvls[b] - lvls[c]) / 2;
+            makeup_gain[b] = (2.f - lvls[a] - lvls[c]) / 2;
+            makeup_gain[c] = (2.f - lvls[a] - lvls[b]) / 2;
+            wet = (playbacks[a] * (lvls[a] / 3 + makeup_gain[a])) + (playbacks[b] * (lvls[b] / 3 + makeup_gain[b])) + (playbacks[c] * (lvls[c] / 3 + makeup_gain[c]));
+            break;
     }
 
     return wet;
