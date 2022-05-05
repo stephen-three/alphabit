@@ -54,8 +54,7 @@ public:
           indexTracker(0),
           rateRemainder(0.f),
           pushVal(0)
-    {
-    }
+    {}
 
     // Getters
     inline bool get_rec()
