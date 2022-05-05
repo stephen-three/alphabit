@@ -1,5 +1,5 @@
 // alphabit.cpp
-// ver_00f
+// ver_00g
 //
 // Three Channel Looper
 //
@@ -8,7 +8,7 @@
 #include "daisy_seed.h"
 #include "daisysp.h"
 
-const std::string ver = "alphabit_00f";
+const std::string ver = "alphabit_00g";
 const std::string notes = "Tested. Working as intended.";
 
 #define MAX_SIZE (96000 * 30) // 30 sec of floats at 96 kHz
