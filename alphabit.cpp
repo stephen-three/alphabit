@@ -216,7 +216,7 @@ daisy::GPIO ledR;
 daisy::GPIO ledG;
 daisy::GPIO ledB;
 // digital input pin, ON-ON switches
-daisy::GPIO fwsBehavior;
+daisy::GPIO fswBehavior;
 daisy::GPIO rvrsA;
 daisy::GPIO rvrsB;
 daisy::GPIO rvrsC;
@@ -294,7 +294,7 @@ int main(void)
             ledR.Init(D10, GPIO::Mode::OUTPUT);
             ledG.Init(D11, GPIO::Mode::OUTPUT);
             ledB.Init(D12, GPIO::Mode::OUTPUT);
-            fwsBehavior.Init(D7, GPIO::Mode::INPUT, GPIO::Pull::PULLDOWN);
+            fswBehavior.Init(D7, GPIO::Mode::INPUT, GPIO::Pull::PULLDOWN);
             rvrsA.Init(D24, GPIO::Mode::INPUT, GPIO::Pull::PULLDOWN);
             rvrsB.Init(D25, GPIO::Mode::INPUT, GPIO::Pull::PULLDOWN);
             rvrsC.Init(D28, GPIO::Mode::INPUT, GPIO::Pull::PULLDOWN);
@@ -346,7 +346,7 @@ int main(void)
         while (System::GetNow() < time + 300)
         {}
     }
-    fswHOLD = fwsBehavior.Read();
+    fswHOLD = fswBehavior.Read();
     A.ClearLoop();
     B.ClearLoop();
     C.ClearLoop();
