@@ -222,9 +222,6 @@ daisy::GPIO rvrsC;
 float DSY_SDRAM_BSS loopA[MAX_SIZE];
 float DSY_SDRAM_BSS loopB[MAX_SIZE];
 float DSY_SDRAM_BSS loopC[MAX_SIZE];
-LoopChannel A(loopA, MAX_SIZE); // primary channel
-LoopChannel B(loopB, MAX_SIZE); // secondary
-LoopChannel C(loopC, MAX_SIZE); // secondary
 /* global LoopChannels
     LoopChannels are global because
     they need to zero'd, ClearLoop(), before entering the callback
@@ -232,8 +229,10 @@ LoopChannel C(loopC, MAX_SIZE); // secondary
     and a callback with extra parameters cannot be called by hw.StartAudio()
     The static variables in the callback are static for the second reason as well.
 */
-bool fswHOLD = false;
-/* fswHOLD
+LoopChannel A(loopA, MAX_SIZE); // primary channel
+LoopChannel B(loopB, MAX_SIZE); // secondary
+LoopChannel C(loopC, MAX_SIZE); // secondary
+/* holdFswToRecord
     Upon startup, determines the behavior
     of the loop channels' footswitches.
     if true:
@@ -245,6 +244,7 @@ bool fswHOLD = false;
         Press 2x to toggle playback
         Hold to clear loop
 */
+bool holdFswToRecord = false;
 
 long remap(
     const long &x,
@@ -345,7 +345,7 @@ int main(void)
         while (System::GetNow() < time + 300)
         {}
     }
-    fswHOLD = fswBehavior.Read();
+    holdFswToRecord = fswBehavior.Read();
     A.ClearLoop();
     B.ClearLoop();
     C.ClearLoop();
@@ -808,7 +808,7 @@ void AudioCallback(daisy::AudioHandle::InputBuffer in, daisy::AudioHandle::Outpu
                 byp_relay.Write(byp);
                 break;
             case 2:
-                if (fswHOLD)
+                if (holdFswToRecord)
                 {
                     if (A.resetEnabled())
                     {
@@ -868,7 +868,7 @@ void AudioCallback(daisy::AudioHandle::InputBuffer in, daisy::AudioHandle::Outpu
                 break;
         }
 
-        if (fswHOLD)
+        if (holdFswToRecord)
         {
             static bool dlayRECstop[3] = {false, false, false};
             enum {a = 0, b, c};
