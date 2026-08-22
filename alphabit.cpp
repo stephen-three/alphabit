@@ -595,6 +595,15 @@ void LoopChannel::Shift_position(LoopChannel *a)
     }
 }
 
+/* Footswitch::Handle()
+    Handles the logic for a footswitch and returns a value, input, based on the footswitch's state.
+    Input values:
+        0 = no action
+        1 = single press
+        2 = double press
+        3 = hold
+        4 = released after hold
+*/
 int Footswitch::Handle(uint16_t holdTime /* =600 */)
 {
     uint8_t input = 0;
@@ -798,6 +807,7 @@ void AudioCallback(daisy::AudioHandle::InputBuffer in, daisy::AudioHandle::Outpu
         static uint16_t freqA_benchMark = 0;
         static uint16_t freqB_benchMark = 0;
         static uint16_t freqC_benchMark = 0;
+        // handle command from the Bypass footswitch
         switch (fswCommand)
         {
             case 0:
@@ -867,7 +877,7 @@ void AudioCallback(daisy::AudioHandle::InputBuffer in, daisy::AudioHandle::Outpu
                 gk_takeBench = true;
                 break;
         }
-
+        // handle commands from the loop channels' footswitches
         if (holdFswToRecord)
         {
             static bool dlayRECstop[3] = {false, false, false};
