@@ -5,9 +5,10 @@
 //
 // May 2022, Stephen Johnson
 
-#include "daisy_seed.h"
-#include "daisysp.h"
 #include "loopchannel.h"
+#include "daisy_seed.h"
+#include "tone.h"
+#include "daisysp.h"
 
 const std::string ver = "alphabit_00g";
 
@@ -44,7 +45,7 @@ public:
           hold(false)
     {
         using namespace daisy;
-        fswitch.Init(pin_assignment, 0.f, Switch::TYPE_MOMENTARY, Switch::POLARITY_INVERTED, Switch::PULL_UP);
+        fswitch.Init(pin_assignment, 0.f, Switch::TYPE_MOMENTARY, Switch::POLARITY_INVERTED, GPIO::Pull::PULLUP);
     }
 
     int Handle(uint16_t holdTime = 600);
@@ -57,6 +58,7 @@ public:
 
 daisy::DaisySeed hw;
 daisysp::CrossFade cf;
+using namespace daisysp;
 daisysp::Tone fltrA;
 daisysp::Tone fltrB;
 daisysp::Tone fltrC;
@@ -183,7 +185,7 @@ int main(void)
         using namespace daisy;
         ledR.Write(true);
         ledB.Write(true);
-        uint32_t time = System::GetNow();
+        std::uint32_t time = System::GetNow();
         while (System::GetNow() < time + 450)
         {}
         ledR.Write(false);
@@ -859,7 +861,7 @@ void AudioCallback(daisy::AudioHandle::InputBuffer in, daisy::AudioHandle::Outpu
         {
             // "Clearing Loop" lighting cue
             static uint8_t cueCount = 0;
-            static uint32_t prev = 0;
+            static std::uint32_t prev = 0;
             ledR.Write(false);
             ledB.Write(false);
             bypR.Write(false);
