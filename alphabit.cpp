@@ -7,6 +7,7 @@
 
 #include "daisy_seed.h"
 #include "daisysp.h"
+#include "footswitch.h"
 
 const std::string ver = "alphabit_00g";
 
@@ -144,45 +145,6 @@ private:
 
     // called in NextSample_1()
     void Shift_position(LoopChannel *a);
-};
-
-class Footswitch
-{
-private:
-    daisy::Switch fswitch;
-    bool live;
-    bool last;
-    bool dcWait; // dc: Double Click
-    bool dcWhenReleased;
-    bool snglOK;
-    long rleasTime;
-    bool ignrRelease;
-    bool waitForRelease;
-    bool hold;
-    const static uint8_t dcTimeOut = 200;
-
-public:
-    Footswitch(daisy::Pin pin_assignment)
-        : live(false),
-          last(false),
-          dcWait(false),
-          dcWhenReleased(false),
-          snglOK(true),
-          rleasTime(-1),
-          ignrRelease(false),
-          waitForRelease(false),
-          hold(false)
-    {
-        using namespace daisy;
-        fswitch.Init(pin_assignment, 0.f, Switch::TYPE_MOMENTARY, Switch::POLARITY_INVERTED, Switch::PULL_UP);
-    }
-
-    int Handle(uint16_t holdTime = 600);
-
-    inline long get_releaseTime()
-    {
-        return rleasTime;
-    }
 };
 
 daisy::DaisySeed hw;
@@ -593,86 +555,6 @@ void LoopChannel::Shift_position(LoopChannel *a)
             position %= a->mod;
         }
     }
-}
-
-/* Footswitch::Handle()
-    Handles the logic for a footswitch and returns a value, input, based on the footswitch's state.
-    Input values:
-        0 = no action
-        1 = single press
-        2 = double press
-        3 = hold
-        4 = released after hold
-*/
-int Footswitch::Handle(uint16_t holdTime /* =600 */)
-{
-    uint8_t input = 0;
-
-    fswitch.Debounce();
-    live = fswitch.Pressed();
-
-    // pressed
-    if (live && !last)
-    {
-        ignrRelease = false;
-        waitForRelease = false;
-        snglOK = true;
-        hold = false;
-
-        if ((daisy::System::GetNow() - rleasTime) < dcTimeOut && !dcWhenReleased && dcWait)
-        {
-            dcWhenReleased = true;
-        }
-        else dcWhenReleased = false;
-        dcWait = false;
-    }
-    // released
-    else if (!live && last)
-    {
-        if (!ignrRelease)
-        {
-            rleasTime = daisy::System::GetNow();
-            if (!dcWhenReleased) dcWait = true;
-            // double click
-            else
-            {
-                input = 2;
-                dcWhenReleased = false;
-                dcWait = false;
-                snglOK = false;
-            }
-        }
-        // released after hold
-        else if (hold)
-        {
-            input = 4;
-            hold = false;
-            rleasTime = daisy::System::GetNow();
-        }
-    }
-
-    // single press
-    if (!live && (daisy::System::GetNow() - rleasTime) >= dcTimeOut && dcWait && !dcWhenReleased && snglOK && input != 2)
-    {
-        input = 1;
-        dcWait = false;
-    }
-    // hold
-    if (live && fswitch.TimeHeldMs() > holdTime)
-    {
-        if (!hold)
-        {
-            input = 3;
-            waitForRelease = true;
-            ignrRelease = true;
-            dcWhenReleased = false;
-            dcWait = false;
-            hold = true;
-        }
-    }
-
-    last = live;
-    return input;
 }
 
 // non-class functions
