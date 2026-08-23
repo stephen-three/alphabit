@@ -1,16 +1,16 @@
 // alphabit.cpp
-// ver_00g
+// ver_00h
 //
 // Three Channel Looper
 //
-// May 2022, Stephen Johnson
+// Aug 2026, Stephen Johnson
 
 #include "daisysp.h"
 #include "daisy_seed.h"
 #include "loopchannel.h"
 #include "footswitch.h"
 
-const std::string ver = "alphabit_00g";
+const std::string ver = "alphabit_00h";
 
 #define MAX_SIZE (96000 * 30) // 30 sec of floats at 96 kHz
 #define FREQ_MAX 2000         // 2kHz
@@ -84,14 +84,20 @@ long remap(
     const long &inMin,
     const long &inMax,
     const long &outMin,
-    const long &outMax);
+    const long &outMax
+);
 
-float MakePlayback(uint8_t playCondition, const float playbacks[3], LoopChannel *channels[3]);
+float MakePlayback(
+    uint8_t playCondition, 
+    const float playbacks[3], 
+    LoopChannel *channels[3]
+);
 
 void AudioCallback(
     daisy::AudioHandle::InputBuffer in,
     daisy::AudioHandle::OutputBuffer out,
-    size_t size);
+    size_t size
+);
 
 int main(void)
 {
