@@ -189,9 +189,6 @@ int main(void)
     {}
 }
 
-// class function definitions
-
-
 // non-class functions
 long remap(const long &x, const long &inMin, const long &inMax, const long &outMin, const long &outMax)
 {
