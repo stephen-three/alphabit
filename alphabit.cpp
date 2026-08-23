@@ -5,10 +5,9 @@
 //
 // May 2022, Stephen Johnson
 
-#include "loopchannel.h"
-#include "daisy_seed.h"
-#include "tone.h"
 #include "daisysp.h"
+#include "daisy_seed.h"
+#include "loopchannel.h"
 
 const std::string ver = "alphabit_00g";
 
