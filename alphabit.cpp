@@ -12,6 +12,8 @@
 
 const std::string ver = "alphabit_00h";
 
+using uint32_t = std::uint32_t;
+
 #define MAX_SIZE (96000 * 30) // 30 sec of floats at 96 kHz
 #define FREQ_MAX 2000         // 2kHz
 #define FREQ_MIN 50           // 50Hz
@@ -152,7 +154,7 @@ int main(void)
         using namespace daisy;
         ledR.Write(true);
         ledB.Write(true);
-        std::uint32_t time = System::GetNow();
+        uint32_t time = System::GetNow();
         while (System::GetNow() < time + 450)
         {}
         ledR.Write(false);
@@ -747,7 +749,7 @@ void AudioCallback(daisy::AudioHandle::InputBuffer in, daisy::AudioHandle::Outpu
         {
             // "Clearing Loop" lighting cue
             static uint8_t cueCount = 0;
-            static std::uint32_t prev = 0;
+            static uint32_t prev = 0;
             ledR.Write(false);
             ledB.Write(false);
             bypR.Write(false);
