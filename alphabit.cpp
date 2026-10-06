@@ -280,10 +280,10 @@ void AudioCallback(daisy::AudioHandle::InputBuffer in, daisy::AudioHandle::Outpu
     */
     // Controls
     {
-        static Footswitch fsw(daisy::seed::D26);
-        static Footswitch fswA(daisy::seed::D27);
-        static Footswitch fswB(daisy::seed::D29);
-        static Footswitch fswC(daisy::seed::D30);
+        static cjm::Footswitch fsw(daisy::seed::D26);
+        static cjm::Footswitch fswA(daisy::seed::D27);
+        static cjm::Footswitch fswB(daisy::seed::D29);
+        static cjm::Footswitch fswC(daisy::seed::D30);
 
         uint16_t md = hw.adc.Get(modeSw) / 64; // value: 0-65536/64 = 0-1024
         if (md < 124) mode = 1;
